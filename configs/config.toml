@@ -1,0 +1,26 @@
+# Server Configuration
+[server]
+port = 8080
+
+# DB Configuration
+[database]
+# PostgreSQL connection string
+# Example: "postgres://user:password@host:port/dbname?sslmode=disable"
+# For local development: "postgres://postgres:pass@localhost:5432/yoru_pastebin?sslmode=disable"
+connection_string = "postgres://ryu:pass@localhost:5432/yoru_pastebin?sslmode=disable"
+
+# Paste Settings
+[paste]
+# Length of the generated unique ID (e.g., 8 means 8 characters)
+id_length = 8
+# Default expiration in minutes if not specified by user (0 for never)
+default_expiration_minutes = 0 # Example: 60 for 1 hour
+# Maximum content size in bytes (e.g., 1MB = 1048576)
+max_content_size_bytes = 1048576
+
+# Security Settings
+[security]
+# Cost for bcrypt password hashing (higher is slower but more secure)
+bcrypt_cost = 12
+# Max requests per second for rate limiting (0 to disable)
+rate_limit_per_second = 5
