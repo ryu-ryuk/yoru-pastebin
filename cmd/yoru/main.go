@@ -14,13 +14,22 @@ import (
 	"github.com/ryu-ryuk/yoru/internal/server" 
 )
 
+
+// main function initlializes the application, loads configuration, connects to the database, starts the HTTP server, 
+// and handles proper shutdown.
+
+// This is the entry point of the Yoru Pastebin application.
+// it uses the config package to load configuration settings, the database package to establish a connection to the database,
+// and the server package to start the HTTP server.
 func main() {
 	// load configuration
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
-
+	// log the configuration for debugging purposes
+	// log.Printf("Configuration loaded: %+v", cfg)
+	
 	// connecting to the database
 	db, err := database.NewDB(cfg)
 	if err != nil {
