@@ -1,5 +1,6 @@
 ## preview
-![image](https://github.com/user-attachments/assets/3a5064bf-d6f2-429d-b1bb-85c9e271332c)
+
+![image](https://github.com/user-attachments/assets/999773b4-c5da-4b1f-b889-b526b2eee52a)
 
 
 docker run --name yoru-postgres \
