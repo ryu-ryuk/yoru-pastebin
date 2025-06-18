@@ -155,7 +155,7 @@ curl -X POST \
 ```json
 {
   "id": "aBcD1eFg",
-  "url": "[https://paste.alokranjan.me/aBcD1eFg/](https://paste.alokranjan.me/aBcD1eFg/)"
+  "url": "[http://paste.alokranjan.me/aBcD1eFg/](http://paste.alokranjan.me/aBcD1eFg/)"
 }
 ```
 
@@ -182,13 +182,13 @@ Other error codes include `413 Request Entity Too Large`, `500 Internal Server E
 **Example Request (public paste):**
 
 ```bash
-curl [https://paste.alokranjan.me/api/v1/pastes/aBcD1eFg](https://paste.alokranjan.me/api/v1/pastes/aBcD1eFg)
+curl "http://localhost:8080/api/v1/pastes/aBcD1eFg"
 ```
 
 **Example Request (password-protected paste):**
 
 ```bash
-curl "[https://paste.alokranjan.me/api/v1/pastes/xYz1w2uV?password=supersecurepassword123](https://paste.alokranjan.me/api/v1/pastes/xYz1w2uV?password=supersecurepassword123)"
+curl "http://localhost:8080/api/v1/pastes/xYz1w2uV?password=supersecurepassword123"
 ```
 
 **Successful Response (HTTP 200 OK):**
