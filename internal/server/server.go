@@ -406,7 +406,7 @@ func (s *Server) handleGetPaste() http.HandlerFunc {
 
 // --- API HANDLERS ---
 
-// CreatePasteRequest represents the JSON request body for creating a paste via API.
+// this  represents the JSON request body for creating a paste via API.
 type CreatePasteRequest struct {
 	Content          string `json:"content"`
 	Language         string `json:"language"`
@@ -414,17 +414,17 @@ type CreatePasteRequest struct {
 	Password         string `json:"password"`
 }
 
-// GetPasteResponse represents the JSON response for retrieving a paste via API.
+// this represents the JSON response for retrieving a paste via API.
 type GetPasteResponse struct {
 	ID        string    `json:"id"`
 	Content   string    `json:"content"`
 	Language  string    `json:"language"`
 	CreatedAt time.Time `json:"created_at"`
 	ExpiresAt *time.Time `json:"expires_at,omitempty"`
-	// No password_hash, salt, encrypted_iv for API response
+	// no password_hash, salt, encrypted_iv for API response
 }
 
-// apiCreatePaste handles the API request to create a new paste.
+// handles the API request to create a new paste.
 func (s *Server) apiCreatePaste() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -452,7 +452,7 @@ func (s *Server) apiCreatePaste() http.HandlerFunc {
 
 		language := req.Language
 		if language == "" {
-			language = "plaintext" // Default if not specified
+			language = "plaintext" // goes to this for default
 		}
 
 		password := req.Password
@@ -521,12 +521,12 @@ func (s *Server) apiCreatePaste() http.HandlerFunc {
 
 		apiRespondJSON(w, http.StatusCreated, map[string]string{
 			"id":  newPaste.ID,
-			"url": fmt.Sprintf("http://localhost:%d/%s/", s.config.Server.Port, newPaste.ID), // Adjust domain for production
+			"url": fmt.Sprintf("http://localhost:%d/%s/", s.config.Server.Port, newPaste.ID), // TODO: Adjust domain for production
 		})
 	}
 }
 
-// apiGetPaste handles the API request to retrieve a paste.
+// handles the API request to retrieve a paste.
 func (s *Server) apiGetPaste() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
