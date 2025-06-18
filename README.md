@@ -96,7 +96,7 @@ curl http://localhost:8080/api/v1/pastes/<PROTECTED_PASTE_ID>?password=wrongpass
 
 Yoru Pastebin provides a simple RESTful API for programmatic paste creation and retrieval.
 
-**Base URL:** `https://paste.alokranjan.me/api/v1` (replace with your actual deployed API base URL)
+**Base URL:** `https://localhost:8080/api/v1`
 
 ---
 
@@ -128,7 +128,7 @@ Yoru Pastebin provides a simple RESTful API for programmatic paste creation and 
 
 ```bash
 curl -X POST \
-  [https://paste.alokranjan.me/api/v1/pastes](https://paste.alokranjan.me/api/v1/pastes) \
+  https://localhost:8080/api/v1/pastes \
   -H "Content-Type: application/json" \
   -d '{
     "content": "func main() {\n  fmt.Println(\"Hello, API!\")\n}",
@@ -141,7 +141,7 @@ curl -X POST \
 
 ```bash
 curl -X POST \
-  [https://paste.alokranjan.me/api/v1/pastes](https://paste.alokranjan.me/api/v1/pastes) \
+  https://localhost:8080/api/v1/pastes \
   -H "Content-Type: application/json" \
   -d '{
     "content": "This is very sensitive data.",
@@ -213,14 +213,11 @@ curl "[https://paste.alokranjan.me/api/v1/pastes/xYz1w2uV?password=supersecurepa
 Other error codes include `401 Unauthorized` (for incorrect password), `500 Internal Server Error`.
 
 ## preview
-<<<<<<< HEAD
 
 ![image](https://github.com/user-attachments/assets/999773b4-c5da-4b1f-b889-b526b2eee52a)
-=======
 | ![Screenshot 1](/docs/assets/webui.png) | ![Screenshot 2](/docs/assets/api.png) |
 |:----------------------------------------:|:----------------------------------------:|
 |        *The WebUI for the tool*         |        *API usage*         |
->>>>>>> 4e808d0 (readme)
 
 
 # docker setup | to be updated
