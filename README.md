@@ -2,6 +2,13 @@
 
 A fast, secure, and ephemeral pastebin service built with Go, PostgreSQL, and Docker.
 
+## preview
+
+| ![Screenshot 1](/docs/assets/webui.png) | ![Screenshot 2](/docs/assets/api.png) |
+|:----------------------------------------:|:----------------------------------------:|
+|        *The WebUI for the tool*         |        *API usage*         |
+
+
 ## Features
 
 * **Web UI:** Simple interface for creating and viewing pastes.
@@ -211,13 +218,6 @@ curl "http://localhost:8080/api/v1/pastes/xYz1w2uV?password=supersecurepassword1
 }
 ```
 Other error codes include `401 Unauthorized` (for incorrect password), `500 Internal Server Error`.
-
-## preview
-
-![image](https://github.com/user-attachments/assets/999773b4-c5da-4b1f-b889-b526b2eee52a)
-| ![Screenshot 1](/docs/assets/webui.png) | ![Screenshot 2](/docs/assets/api.png) |
-|:----------------------------------------:|:----------------------------------------:|
-|        *The WebUI for the tool*         |        *API usage*         |
 
 
 # docker setup | to be updated
