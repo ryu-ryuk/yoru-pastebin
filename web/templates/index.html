@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yoru Pastebin - Create Paste</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text x=%2250%%22 y=%2250%%22 style=%22dominant-baseline:central;text-anchor:middle;font-size:90px;%22>✨</text></svg>">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Yoru Pastebin</h1>
+            <p class="tagline">Simple, secure, and ephemeral text sharing.</p>
+        </header>
+
+        <main class="main-content">
+            <form action="/" method="post" class="paste-form">
+                <textarea name="content" rows="15" placeholder="Paste your text here..." required autofocus></textarea>
+                <div class="form-group">
+                    <label for="language">Language Syntax:</label>
+                    <select name="language" id="language">
+                        <option value="plaintext">Plain Text</option>
+                        <option value="auto">Auto-detect</option>
+                        <option value="go">Go</option>
+                        <option value="rust">Rust</option>
+                        <option value="python">Python</option>
+                        <option value="javascript">JavaScript</option>
+                        <option value="typescript">TypeScript</option>
+                        <option value="html">HTML</option>
+                        <option value="css">CSS</option>
+                        <option value="json">JSON</option>
+                        <option value="yaml">YAML</option>
+                        <option value="markdown">Markdown</option>
+                        <option value="bash">Bash / Shell</option>
+                        <option value="sql">SQL</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="expires">Expires in:</label>
+                    <select name="expires_in_minutes" id="expires">
+                        <option value="0">Never</option>
+                        <option value="10">10 Minutes</option>
+                        <option value="60">1 Hour</option>
+                        <option value="1440">1 Day</option>
+                        <option value="10080">1 Week</option>
+                        <option value="43200">1 Month</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password (optional):</label>
+                    <input type="password" name="password" id="password" placeholder="Enter password for encryption">
+                </div>
+                <button type="submit">Create Paste</button>
+            </form>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; {{ .CurrentYear }} Yoru Pastebin. Built with Go.</p>
+        </footer>
+    </div>
+</body>
+</html>
