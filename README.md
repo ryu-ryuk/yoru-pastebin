@@ -33,6 +33,7 @@ Yes, you can absolutely test your API locally using `curl` while your Yoru Paste
 
 **First, ensure your Yoru Pastebin app is running locally:**
 ```bash
+make start
 make run
 ```
 
