@@ -37,17 +37,27 @@ Yoru Pastebin is deployed and available for use at: **[https://paste.alokranjan.
 
 ---
 
-## (=ﾟ▽ﾟ)/ Features
+Here’s a cleaner, more **Catppuccin Mocha–inspired** version of the `## (=ﾟ▽ﾟ)/ Features` section with icons and slight formatting to enhance visual clarity while staying markdown-safe and GitHub-renderable:
 
-* **Web UI:** Simple and intuitive interface for creating and viewing pastes.
-* **API:** Programmatic access for developers to integrate Yoru into their tools and workflows.
-* **Unique, Unguessable IDs:** Securely generated short identifiers for pastes.
-* **Configurable Expiration:** Set pastes to automatically self-destruct after a specified time (e.g., 10 minutes, 1 hour, 1 day, never).
-* **Password Protection:** Encrypt paste content with a password; content is only viewable with the correct key.
-* **Language Syntax Highlighting:** Automatic or user-specified highlighting for popular languages (Go, Rust, Python, Markdown, JSON, YAML, HTML, CSS, JavaScript, Bash, SQL, and more).
-* **Developer-Friendly Viewer:** Includes essential tools like line numbers, content search with navigation, word wrap toggle, instant copy of raw content, and quick sharing of paste links.
-* **Containerized:** Built with Docker for easy, consistent, and portable deployment across various environments.
-* **Secure Communications:** Designed for HTTPS, ensuring data privacy in transit (via Traefik in recommended deployments).
+---
+
+## 🍥 Features
+
+✨ **Yoru Pastebin** is designed for privacy, clarity, and performance.
+Each feature is tuned for modern dev workflows and secure sharing.
+
+---
+
+* 🖥️ **Web UI:** Minimal, dark-themed interface for creating and viewing pastes.
+* ⚙️ **API Support:** RESTful API for developers and CLI tools.
+* 🔐 **Password Protection:** Encrypt content with a password for secure access.
+* ⏱️ **Expiring Pastes:** Set pastes to self-destruct (10 min / 1 hour / 1 day / never).
+* 🔑 **Secure IDs:** Random, unguessable identifiers for accessing pastes.
+* 🧠 **Syntax Highlighting:** Auto and manual language detection for over 30 languages.
+* 🧰 **Dev Tools:** Line numbers, search navigation, word wrap, copy, raw mode.
+* 📦 **Containerized:** Built with Docker, deployable in one command.
+* ☁️ **HTTPS by Default:** Secure access through Traefik reverse proxy.
+* 🌙 **Mocha Theme:** Styled for dark-mode lovers with [Catppuccin](https://github.com/catppuccin).
 
 ---
 
