@@ -2,7 +2,7 @@ name: Deploy to VM
 
 on:
   push:
-    branches: [main] 
+    branches: [main]
 
 jobs:
   deploy:
@@ -17,11 +17,11 @@ jobs:
         mkdir -p ~/.ssh
         echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_ed25519
         chmod 600 ~/.ssh/id_ed25519
-        ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts
+        ssh-keyscan -H ${{ secrets.HOST_IP }} >> ~/.ssh/known_hosts
 
     - name: Deploy
       run: |
-        ssh -i ~/.ssh/id_ed25519 ${{ secrets.USER }}@${{ secrets.HOST }} << 'EOF'
+        ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no ${{ secrets.USER }}@${{ secrets.HOST_IP }} << 'EOF'
           cd ~/yoru-pastebin
           git pull origin main
           docker compose down
