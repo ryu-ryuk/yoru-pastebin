@@ -25,7 +25,7 @@ A fast, secure, and ephemeral pastebin service built with Go, PostgreSQL, and Do
 
 ### Try it Live!
 
-Yoru Pastebin is deployed at: ``
+Yoru Pastebin is deployed at: `[paste.alokranjan.me](paste.alokranjan.me)`
 
 ### **Local API Testing Example (`curl`)**
 
@@ -220,11 +220,7 @@ curl "http://paste.alokranjan.me/api/v1/pastes/xYz1w2uV?password=supersecurepass
 ```
 Other error codes include `401 Unauthorized` (for incorrect password), `500 Internal Server Error`.
 
-
-# setup | to be updated
-```
-```
-
+---
 
 ## Contributing
 
