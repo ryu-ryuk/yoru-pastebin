@@ -16,12 +16,13 @@ services:
       - "traefik.http.routers.yoru.rule=Host(`paste.alokranjan.me`)"
       - "traefik.http.routers.yoru.entrypoints=websecure"
       - "traefik.http.routers.yoru.tls=true"
-      - "traefik.http.routers.yoru.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.yoru.tls.certresolver=default"
+      - "traefik.http.routers.yoru.tls.domains[0].main=paste.alokranjan.me"
       - "traefik.http.services.yoru.loadbalancer.server.port=${SERVER_PORT}"
     networks:
       - web
 
-  db: 
+  db:
     image: postgres:16-alpine
     restart: unless-stopped
     env_file:
@@ -38,18 +39,14 @@ services:
   traefik:
     image: traefik:v2.10
     restart: unless-stopped
-    env_file:
-      - .env
     command:
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
       - --entrypoints.web.address=:80
       - --entrypoints.websecure.address=:443
-      - --entrypoints.web.http.redirections.entrypoint.to=websecure
-      - --entrypoints.web.http.redirections.entrypoint.scheme=https
-      - --certificatesresolvers.letsencrypt.acme.tlschallenge=true
-      - --certificatesresolvers.letsencrypt.acme.email=${EMAIL}
-      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+      - --entrypoints.websecure.http.tls=true
+      - --entrypoints.websecure.http.tls.certificates[0].certFile=/certs/cert.pem
+      - --entrypoints.websecure.http.tls.certificates[0].keyFile=/certs/key.pem
       - --api.dashboard=true
       - --api.insecure=true
     ports:
@@ -58,7 +55,7 @@ services:
       - "8080:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./traefik-data:/letsencrypt
+      - ./certs:/certs:ro
     networks:
       - web
 
