@@ -7,6 +7,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Checkout code
@@ -17,14 +18,70 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Add VM to known_hosts
-        run: ssh-keyscan -H ${{ secrets.VM_HOST }} >> ~/.ssh/known_hosts
-
-      - name: Deploy
+      - name: Validate secrets
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} << 'EOF'
-            cd ${{ secrets.VM_PATH }}
+          echo "=== SECRETS VALIDATION ==="
+          echo "VM_HOST: ${#VM_HOST} chars"  # Verify length
+          echo "VM_USER: ${#VM_USER} chars"
+          echo "VM_PATH: ${#VM_PATH} chars"
+          echo "SSH key: ${#SSH_PRIVATE_KEY} chars"
+          echo "==========================="
+
+      - name: Network diagnostics
+        run: |
+          echo "=== NETWORK CHECKS ==="
+          ping -c 3 ${{ secrets.VM_HOST }} || true
+          nc -zv -w 5 ${{ secrets.VM_HOST }} 22
+          echo "Public IP: $(curl -s ifconfig.me)"
+          echo "GitHub Actions IP: $(curl -s https://api.ipify.org)"
+          echo "========================="
+
+      - name: SSH setup with debug
+        run: |
+          set -x  # Enable command echo
+          echo "=== SSH SETUP ==="
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          ssh-keyscan -v -H ${{ secrets.VM_HOST }} >> ~/.ssh/known_hosts
+          ssh-keygen -l -f ~/.ssh/known_hosts
+          echo "================="
+        timeout-minutes: 2
+
+      - name: Connection test
+        run: |
+          set -x
+          echo "=== CONNECTION TEST ==="
+          ssh -Tvvv -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} << 'EOF'
+            echo "SSH connection successful!"
+            echo "User: $(whoami)"
+            echo "Hostname: $(hostname)"
+            echo "Working directory: $(pwd)"
+            echo "Docker status: $(docker ps -q | wc -l) containers running"
+          EOF
+          echo "========================"
+
+      - name: Deployment with full debug
+        run: |
+          set -x
+          echo "=== DEPLOYMENT START ==="
+          ssh -vvv -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} << 'DEBUG_EOF'
+            echo "VM_PATH: ${{ secrets.VM_PATH }}"
+            cd "${{ secrets.VM_PATH }}"
+            
+            echo "--- GIT STATUS ---"
+            git status
+            git remote -v
+            
+            echo "--- GIT PULL ---"
             git pull origin main
+            
+            echo "--- DOCKER COMPOSE ---"
+            docker compose version
             docker compose down
             docker compose up -d --build
-          EOF
+            
+            echo "--- VERIFICATION ---"
+            docker ps
+            docker compose logs --tail=20
+          DEBUG_EOF
+          echo "=== DEPLOYMENT COMPLETE ==="
