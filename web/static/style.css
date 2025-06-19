@@ -413,12 +413,6 @@ a.button:hover {
   background-color: var(--surface2);
 }
 
-footer {
-  text-align: center;
-  padding: 2rem 1rem 1rem;
-  font-size: 0.95rem;
-  color: var(--subtext0);
-}
 
 @media (max-width: 768px) {
     .container {
@@ -788,6 +782,24 @@ footer {
         display: none;
     }
 }
+@media (max-width: 600px) {
+  footer a {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  footer a img {
+    width: 20px;
+    height: 20px;
+  }
+
+  footer {
+    font-size: 0.85rem;
+    padding: 1.5rem 1rem;
+  }
+}
+
+
 .footer {
   margin-top: auto;
 }
@@ -853,31 +865,42 @@ textarea:focus {
 
 
 footer {
-    text-align: center;
-    padding: 2rem 1rem 1rem;
-    font-size: 0.95rem;
-    color: #a6adc8;
+  text-align: center;
+  padding: 2rem 1rem 1rem;
+  font-size: 0.95rem;
+  color: #a6adc8;
+  background-color: transparent;
+  word-wrap: break-word;
+  line-height: 1.6;
 }
+
 
 footer a {
-    color: #f5c2e7;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: 0.4rem;
-    transition: color 0.2s;
+  color: #f5c2e7;
+  text-decoration: none;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  margin-top: 0.5rem;
+  transition: color 0.2s;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 100%;
 }
+
 
 footer a:hover {
-    color: #b4befe;
+  color: #b4befe;
 }
 
+
 footer a img {
-    width: 24px;
-    height: 24px;
-    border-radius: 6px;
-    box-shadow: 0 2px 8px #1e1e2e33;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px #0003;
+  flex-shrink: 0;
 }
 
 /* Responsive adjustments */
