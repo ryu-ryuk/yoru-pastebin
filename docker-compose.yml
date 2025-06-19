@@ -7,50 +7,57 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
-      # These environment variables will override config.toml values
-      # Update with your actual RDS endpoint, user, and password
-      DATABASE_CONNECTION_STRING: "postgres://<RDS_USER>:<RDS_PASSWORD>@<RDS_ENDPOINT>:5432/<RDS_DB_NAME>?sslmode=require"
-      SERVER_PORT: 8080 # Or whatever port your app listens on
+      DATABASE_CONNECTION_STRING: ${DATABASE_CONNECTION_STRING}
+      SERVER_PORT: ${SERVER_PORT}
     labels:
-      # Traefik labels for routing and SSL
       - "traefik.enable=true"
-      - "traefik.http.routers.yoru.rule=Host(`yoru.alokranjan.me`)" # CHANGE TO YOUR DESIRED SUBDOMAIN
+      - "traefik.http.routers.yoru.rule=Host(`paste.alokranjan.me`)"
       - "traefik.http.routers.yoru.entrypoints=websecure"
       - "traefik.http.routers.yoru.tls.certresolver=letsencrypt"
-      - "traefik.http.services.yoru.loadbalancer.server.port=8080" # Internal port of your Go app
+      - "traefik.http.services.yoru.loadbalancer.server.port=${SERVER_PORT}"
+    networks:
+      - web
+
+  db: 
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - db_data:/var/lib/postgresql/data
     networks:
       - web
 
   traefik:
-    image: traefik:v2.10 # Use a stable Traefik v2 version
+    image: traefik:v2.10
     restart: unless-stopped
     command:
-      # Enable Docker provider
       - --providers.docker=true
-      - --providers.docker.exposedbydefault=false # Only expose containers with traefik.enable=true label
-      # Entrypoints for HTTP and HTTPS
+      - --providers.docker.exposedbydefault=false
       - --entrypoints.web.address=:80
       - --entrypoints.websecure.address=:443
-      # Redirect HTTP to HTTPS
       - --entrypoints.web.http.redirections.entrypoint.to=websecure
       - --entrypoints.web.http.redirections.entrypoint.scheme=https
-      # Enable Let's Encrypt
       - --certificatesresolvers.letsencrypt.acme.tlschallenge=true
-      - --certificatesresolvers.letsencrypt.acme.email=your-email@example.com # CHANGE THIS
+      - --certificatesresolvers.letsencrypt.acme.email=${EMAIL}
       - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
-      # (Optional) Enable Traefik Dashboard for monitoring
       - --api.dashboard=true
-      - --api.insecure=true # WARNING: For dev/testing, remove in prod or secure properly
+      - --api.insecure=true
     ports:
       - "80:80"
       - "443:443"
-      - "8080:8080" # Traefik dashboard port (optional)
+      - "8080:8080"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro # Mount Docker socket for Traefik to discover containers
-      - ./traefik-data:/letsencrypt # Volume for storing SSL certs
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik-data:/letsencrypt
     networks:
       - web
 
 networks:
   web:
-    external: true # Traefik expects an external network if it's not the primary
+    driver: bridge
+
+volumes:
+  db_data:
