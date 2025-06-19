@@ -16,8 +16,6 @@ services:
       - "traefik.http.routers.yoru.rule=Host(`paste.alokranjan.me`)"
       - "traefik.http.routers.yoru.entrypoints=websecure"
       - "traefik.http.routers.yoru.tls=true"
-      - "traefik.http.routers.yoru.tls.certresolver=default"
-      - "traefik.http.routers.yoru.tls.domains[0].main=paste.alokranjan.me"
       - "traefik.http.services.yoru.loadbalancer.server.port=${SERVER_PORT}"
     networks:
       - web
@@ -41,12 +39,13 @@ services:
     restart: unless-stopped
     command:
       - --providers.docker=true
+      - --providers.file.directory=/etc/traefik/dynamic
+      - --providers.file.watch=true
       - --providers.docker.exposedbydefault=false
       - --entrypoints.web.address=:80
       - --entrypoints.websecure.address=:443
-      - --entrypoints.websecure.http.tls=true
-      - --entrypoints.websecure.http.tls.certificates[0].certFile=/certs/cert.pem
-      - --entrypoints.websecure.http.tls.certificates[0].keyFile=/certs/key.pem
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
       - --api.dashboard=true
       - --api.insecure=true
     ports:
@@ -56,6 +55,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./certs:/certs:ro
+      - ./traefik-dynamic:/etc/traefik/dynamic:ro
     networks:
       - web
 
