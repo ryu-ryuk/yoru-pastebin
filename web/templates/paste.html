@@ -36,7 +36,7 @@
                     | Does not expire
                 {{ end }}
                 {{ if .Paste.IsProtected }}
-                    | <span class="protected">Password Protected</span>
+                    | <span class="prot ected">Password Protected</span>
                 {{ end }}
                 <span class="language-info">Language: {{ .Paste.Language }}</span>
             </p>
@@ -61,6 +61,8 @@
                     <span id="lineCount" class="line-count">Lines: 0</span>
                     <button id="toggleWrap" class="button secondary-button">Toggle Wrap</button>
                     <button id="copyButton" class="button secondary-button">Copy Raw</button>
+                    <button id="prevMatchButton" class="button secondary-button">Prev</button>
+                    <button id="nextMatchButton" class="button secondary-button">Next</button>
                 </div>
             </div>
 
