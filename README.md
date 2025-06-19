@@ -37,10 +37,6 @@ Yoru Pastebin is deployed and available for use at: **[https://paste.alokranjan.
 
 ---
 
-Here’s a cleaner, more **Catppuccin Mocha–inspired** version of the `## (=ﾟ▽ﾟ)/ Features` section with icons and slight formatting to enhance visual clarity while staying markdown-safe and GitHub-renderable:
-
----
-
 ## 🍥 Features
 
 ✨ **Yoru Pastebin** is designed for privacy, clarity, and performance.
