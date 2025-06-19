@@ -20,11 +20,14 @@ jobs:
       - name: Add VM to known_hosts
         run: ssh-keyscan -H ${{ secrets.VM_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Deploy
+      - name: Deploy with debug
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} << 'EOF'
+          ssh -vvv -o StrictHostKeyChecking=no ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} << 'EOF'
+            echo "Current directory: $(pwd)"
             cd ${{ secrets.VM_PATH }}
+            git status
             git pull origin main
             docker compose down
             docker compose up -d --build
+            echo "Deployment completed"
           EOF
