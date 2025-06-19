@@ -1,63 +1,218 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yoru Pastebin - Create Paste</title>
-    <link rel="stylesheet" href="/static/style.css">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text x=%2250%%22 y=%2250%%22 style=%22dominant-baseline:central;text-anchor:middle;font-size:90px;%22>✨</text></svg>">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Yoru Pastebin</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <link rel="icon" type="image/png" href="/static/favicon.png" />
+  <style>
+    body {
+      background-color: #1e1e2e;
+      color: #cdd6f4;
+      font-family: 'Inter', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      flex: 1;
+      width: 90vw;        
+      max-width: 1400px;
+      margin: 2rem auto;
+      padding: 2.5rem;
+      background: #181825;
+      border-radius: 18px;
+      box-shadow: 0 6px 32px #0005;
+    }
+    .dotted-hr {
+      border: none;
+      height: 3px;
+      width: 160px;
+      margin: 0.3rem auto 1rem auto;
+      background: linear-gradient(90deg, #89b4fa, #cba6f7, #f38ba8, #a6e3a1);
+      background-size: 200% 100%;
+      animation: moveGradient 2s linear infinite;
+      border-radius: 2px;
+    }
+
+    @keyframes moveGradient {
+      0% { background-position: 0 0; }
+      100% { background-position: 100% 0; }
+    }
+
+
+
+    header h1 {
+      font-size: 2.7rem;
+      color: #cba6f7;
+      letter-spacing: 1px;
+      margin-bottom: 0.2em;
+    }
+
+    .tagline {
+      color: #a6adc8;
+      font-size: 1.15rem;
+    }
+
+    form.paste-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.7rem;
+    }
+
+    textarea {
+      background-color: #313244;
+      color: #f5e0dc;
+      border: 1.5px solid #585b70;
+      border-radius: 12px;
+      padding: 1.2rem;
+      resize: vertical;
+      font-size: 1.03rem;
+      transition: border 0.2s;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: #cba6f7;
+      box-shadow: 0 0 0 2px #b4befe33;
+    }
+
+    .form-group label {
+      color: #bac2de;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+    }
+
+    .form-group select,
+    .form-group input[type="password"] {
+      padding: 0.8rem;
+      border: 1.5px solid #45475a;
+      border-radius: 9px;
+      background-color: #313244;
+      color: #f2cdcd;
+      font-size: 1rem;
+      transition: border 0.2s;
+    }
+
+    .form-group select:focus,
+    .form-group input[type="password"]:focus {
+      border-color: #89b4fa;
+    }
+
+    button {
+      padding: 0.85rem 1.7rem;
+      border: none;
+      background: linear-gradient(90deg, #cba6f7 60%, #f5c2e7 100%);
+      color: #1e1e2e;
+      border-radius: 12px;
+      font-weight: bold;
+      font-size: 1.1rem;
+      cursor: pointer;
+      box-shadow: 0 2px 8px #cba6f755;
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+
+    button:hover {
+      background: linear-gradient(90deg, #b4befe 60%, #f38ba8 100%);
+      box-shadow: 0 4px 16px #f38ba855;
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem 1rem 1rem;
+      font-size: 0.95rem;
+      color: #a6adc8;
+    }
+
+    footer a {
+      color: #f5c2e7;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 0.4rem;
+      transition: color 0.2s;
+    }
+
+    footer a:hover {
+      color: #b4befe;
+    }
+
+    footer a img {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px #1e1e2e33;
+    }
+
+  </style>
 </head>
+
 <body>
-    <div class="container">
-        <header class="header">
-            <h1>Yoru Pastebin</h1>
-            <p class="tagline">Simple, secure, and ephemeral text sharing.</p>
-        </header>
+  <div class="container">
+    <header>
+      <h1>Yoru Pastebin</h1>
+      <hr class="dotted-hr">
+      <p class="tagline">Simple, secure, and ephemeral text sharing.</p>
+    </header>
 
-        <main class="main-content">
-            <form action="/" method="post" class="paste-form">
-                <textarea name="content" rows="15" placeholder="Paste your text here..." required autofocus></textarea>
-                <div class="form-group">
-                    <label for="language">Language Syntax:</label>
-                    <select name="language" id="language">
-                        <option value="plaintext">Plain Text</option>
-                        <option value="auto">Auto-detect</option>
-                        <option value="go">Go</option>
-                        <option value="rust">Rust</option>
-                        <option value="python">Python</option>
-                        <option value="javascript">JavaScript</option>
-                        <option value="typescript">TypeScript</option>
-                        <option value="html">HTML</option>
-                        <option value="css">CSS</option>
-                        <option value="json">JSON</option>
-                        <option value="yaml">YAML</option>
-                        <option value="markdown">Markdown</option>
-                        <option value="bash">Bash / Shell</option>
-                        <option value="sql">SQL</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="expires">Expires in:</label>
-                    <select name="expires_in_minutes" id="expires">
-                        <option value="0">Never</option>
-                        <option value="10">10 Minutes</option>
-                        <option value="60">1 Hour</option>
-                        <option value="1440">1 Day</option>
-                        <option value="10080">1 Week</option>
-                        <option value="43200">1 Month</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="password">Password (optional):</label>
-                    <input type="password" name="password" id="password" placeholder="Enter password for encryption">
-                </div>
-                <button type="submit">Create Paste</button>
-            </form>
-        </main>
+    <main>
+      <form action="/" method="post" class="paste-form">
+        <textarea name="content" rows="15" placeholder="Paste your text here..." required autofocus></textarea>
 
-        <footer class="footer">
-            <p>&copy; {{ .CurrentYear }} Yoru Pastebin. Built with Go.</p>
-        </footer>
-    </div>
+        <div class="form-group">
+          <label for="language">Language Syntax:</label>
+          <select name="language" id="language">
+            <option value="plaintext">Plain Text</option>
+            <option value="auto">Auto-detect</option>
+            <option value="go">Go</option>
+            <option value="rust">Rust</option>
+            <option value="python">Python</option>
+            <option value="javascript">JavaScript</option>
+            <option value="typescript">TypeScript</option>
+            <option value="html">HTML</option>
+            <option value="css">CSS</option>
+            <option value="json">JSON</option>
+            <option value="yaml">YAML</option>
+            <option value="markdown">Markdown</option>
+            <option value="bash">Bash / Shell</option>
+            <option value="sql">SQL</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="expires">Expires in:</label>
+          <select name="expires_in_minutes" id="expires">
+            <option value="0">Never</option>
+            <option value="10">10 Minutes</option>
+            <option value="60">1 Hour</option>
+            <option value="1440">1 Day</option>
+            <option value="10080">1 Week</option>
+            <option value="43200">1 Month</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password (optional):</label>
+          <input type="password" name="password" id="password" placeholder="Enter password for encryption">
+        </div>
+
+        <button type="submit">Create Paste</button>
+      </form>
+    </main>
+  </div>
+
+  <footer>
+    <p>
+      &copy; {{ .CurrentYear }} <strong style="color:#cba6f7;">Yoru Pastebin</strong> — Built with <span style="color:#89b4fa;">Go</span>.
+      <br/>
+      <a href="https://github.com/ryu-ryuk/yoru-pastebin" target="_blank">
+        <img src="/static/favicon.png" alt="yoru logo" />
+        <span>view source on GitHub</span>
+      </a>
+    </p>
+  </footer>
 </body>
 </html>

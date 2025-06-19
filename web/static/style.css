@@ -1,4 +1,6 @@
-/* Catppuccin Mocha Palette */
+@import url('https://rsms.me/inter/inter.css');
+@import url('https://cdn.jsdelivr.net/npm/firacode@6.2.0/distr/fira_code.css');
+
 :root {
     --rosewater: #f5e0dc;
     --flamingo: #f2cdcd;
@@ -23,11 +25,9 @@
     --surface2: #585b70;
     --surface1: #45475a;
     --surface0: #313244;
-    --base: #1e1e2e; /* Main background */
+    --base: #1e1e2e;
     --mantle: #181825;
     --crust: #11111b;
-
-    /* Semantic Mappings */
     --primary-color: var(--blue);
     --accent-color: var(--mauve);
     --text-color: var(--text);
@@ -41,24 +41,17 @@
     --button-text: var(--base);
     --error-text: var(--red);
     --success-text: var(--green);
-
-    /* Spacing */
     --spacing-xs: 4px;
     --spacing-sm: 8px;
     --spacing-md: 16px;
     --spacing-lg: 24px;
     --spacing-xl: 32px;
-
-    /* Fonts */
-    --font-family-body: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
-    --font-family-heading: 'Georgia', serif;
-
-    /* Border Radius */
+    --font-family-body: 'Inter', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+    --font-family-heading: 'Inter', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+    --font-family-mono: 'Fira Code', 'Fira Mono', 'Consolas', 'Menlo', 'Monaco', monospace;
     --border-radius: 8px;
     --input-radius: 4px;
     --button-radius: 5px;
-
-    /* Shadows (adjusted for dark theme) */
     --shadow-light: 0 2px 8px rgba(0, 0, 0, 0.3);
     --shadow-medium: 0 5px 15px rgba(0, 0, 0, 0.4);
 }
@@ -80,7 +73,7 @@ body {
 }
 
 .container {
-    max-width: 1200px; /* Adjusted */
+    max-width: 1200px;
     margin: var(--spacing-xl) auto;
     padding: var(--spacing-lg);
     flex-grow: 1;
@@ -96,16 +89,16 @@ body {
     border-radius: var(--border-radius);
     box-shadow: var(--shadow-medium);
     margin-bottom: var(--spacing-xl);
-    width: 100%; 
+    width: 100%;
     text-align: center;
 }
 
 .header-top {
     display: flex;
-    flex-wrap: wrap; /* Allow elements to wrap on smaller screens */
-    justify-content: center; /* Center items initially */
+    flex-wrap: wrap;
+    justify-content: center;
     align-items: center;
-    gap: var(--spacing-lg); /* Space between items */
+    gap: var(--spacing-lg);
     margin-bottom: var(--spacing-md);
 }
 .header h1 {
@@ -127,11 +120,10 @@ body {
     border-radius: var(--border-radius);
     box-shadow: var(--shadow-medium);
     width: 100%;
-    max-width: 900px; 
+    max-width: 900px;
     margin-bottom: var(--spacing-xl);
 }
 
-/* Forms */
 .paste-form, .password-form {
     display: flex;
     flex-direction: column;
@@ -149,7 +141,7 @@ textarea {
     color: var(--text-color);
     font-family: monospace;
     resize: vertical;
-    min-height: 250px; 
+    min-height: 250px;
 }
 
 .form-group {
@@ -166,17 +158,16 @@ label {
 
 input[type="number"],
 input[type="password"],
-select { 
+select {
     width: 100%;
     padding: var(--spacing-sm);
     border: 1px solid var(--border-color);
     border-radius: var(--input-radius);
     background-color: var(--mantle);
     color: var(--text-color);
-    font-size: 1em; 
+    font-size: 1em;
 }
 
-/* Buttons */
 button, .button {
     display: inline-block;
     padding: var(--spacing-sm) var(--spacing-md);
@@ -206,8 +197,7 @@ button:hover, .button:hover {
     background-color: var(--surface2);
 }
 
-/* Paste Content Display */
-.paste-content { 
+.paste-content {
     background-color: var(--crust);
     border: 1px solid var(--surface2);
     border-radius: var(--border-radius);
@@ -219,9 +209,9 @@ button:hover, .button:hover {
     width: 100%;
 }
 
-.paste-content.line-numbers-container { 
+.paste-content.line-numbers-container {
     display: flex;
-    padding: 0; 
+    padding: 0;
 }
 
 .line-numbers {
@@ -243,7 +233,7 @@ button:hover, .button:hover {
 .line-numbers-container pre {
     flex-grow: 1;
     margin: 0;
-    padding: var(--spacing-md); 
+    padding: var(--spacing-md);
     padding-left: var(--spacing-md);
     white-space: pre;
     word-wrap: normal;
@@ -255,7 +245,6 @@ button:hover, .button:hover {
     min-height: 300px;
 }
 
-/* Toggle Wrap - when wrap is enabled by JS */
 .line-numbers-container.wrap-enabled pre {
     white-space: pre-wrap;
     word-wrap: break-word;
@@ -264,15 +253,12 @@ button:hover, .button:hover {
     white-space: pre;
 }
 
-
-/* Highlight.js overrides/adjustments */
 .hljs {
     background: transparent !important;
     padding: 0 !important;
     color: var(--text) !important;
 }
 
-/* Ensure the scrollbar of line numbers matches the content scrollbar */
 .line-numbers-container {
   overflow-y: hidden;
 }
@@ -285,18 +271,15 @@ button:hover, .button:hover {
     overflow-y: auto;
 }
 
-
-/* Ensure search highlights are visible */
 .highlight {
     background-color: var(--yellow);
     color: var(--base);
     padding: 1px 0;
     border-radius: 2px;
 }
-.highlight.active { /* For current active search result */
+.highlight.active {
     outline: 2px solid var(--peach);
 }
-
 
 .tagline .protected {
     color: var(--red);
@@ -320,8 +303,6 @@ button:hover, .button:hover {
     justify-content: center;
 }
 
-
-/* Footer */
 .footer {
     color: var(--subtext0);
     font-size: 0.85em;
@@ -330,7 +311,6 @@ button:hover, .button:hover {
     width: 100%;
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
     .container {
         margin: var(--spacing-md) auto;
@@ -362,15 +342,12 @@ button:hover, .button:hover {
     input[type="number"],
     input[type="password"],
     select {
-        min-height: 100px; 
+        min-height: 100px;
     }
     .line-numbers-container pre {
-        min-height: 200px; 
+        min-height: 200px;
     }
 }
-
-
-
 
 .icon-button {
     background: none;
@@ -386,7 +363,7 @@ button:hover, .button:hover {
 }
 
 .icon-button svg {
-    width: 1.2em; 
+    width: 1.2em;
     height: 1.2em;
     vertical-align: middle;
     fill: currentColor;
@@ -397,8 +374,6 @@ button:hover, .button:hover {
     background: none;
     transform: translateY(-1px);
 }
-
-
 
 .create-new-button {
     flex-shrink: 0;
@@ -414,10 +389,10 @@ button:hover, .button:hover {
 
 .paste-id-title {
     color: var(--flamingo);
-    font-size: 2.2em; 
-    margin: 0; 
+    font-size: 2.2em;
+    margin: 0;
     flex-grow: 1;
-    text-align: center; 
+    text-align: center;
 }
 
 .tagline {
@@ -436,12 +411,11 @@ button:hover, .button:hover {
     color: var(--peach);
 }
 
-/* --- Share Box --- */
 .share-box {
     display: flex;
     flex-wrap: nowrap;
     align-items: stretch;
-    gap: 0; 
+    gap: 0;
     width: 100%;
     max-width: 550px;
     margin: var(--spacing-lg) auto;
@@ -506,15 +480,15 @@ button:hover, .button:hover {
 }
 .share-box .icon-button .button-text-feedback {
     color: currentColor;
-    font-size: 0.9em; 
+    font-size: 0.9em;
 }
-/* --- Paste Tools Section --- */
+
 .paste-tools {
     display: flex;
-    flex-wrap: wrap; 
-    justify-content: space-between; 
+    flex-wrap: wrap;
+    justify-content: space-between;
     align-items: center;
-    gap: var(--spacing-md); 
+    gap: var(--spacing-md);
     width: 100%;
     background-color: var(--surface1);
     padding: var(--spacing-sm) var(--spacing-md);
@@ -594,12 +568,10 @@ button:hover, .button:hover {
     color: var(--subtext1);
 }
 
-/* General button styling within paste-tools */
 .paste-tools .button {
     padding: var(--spacing-sm) var(--spacing-md);
     font-size: 0.9em;
 }
-
 
 @media (max-width: 768px) {
     .container {
@@ -615,14 +587,12 @@ button:hover, .button:hover {
     }
     .paste-id-title {
         text-align: center;
-        margin-top: 0; 
+        margin-top: 0;
     }
     .main-content {
         padding: var(--spacing-lg);
         max-width: 100%;
     }
-
-    /* Stack share box elements */
     .share-box {
         flex-wrap: wrap;
         max-width: 100%;
@@ -632,20 +602,17 @@ button:hover, .button:hover {
         border-bottom: 1px solid var(--surface2);
         border-radius: var(--input-radius) var(--input-radius) 0 0;
     }
-
     .share-box .icon-button {
         width: 100%;
         height: auto;
         min-width: 0;
         min-height: 0;
-        padding: var(--spacing-sm) var(--spacing-md); 
+        padding: var(--spacing-sm) var(--spacing-md);
         border-left: none;
         border-radius: 0 0 var(--input-radius) var(--input-radius);
     }
-
-    /* Paste tools layout on mobile */
     .paste-tools {
-        flex-direction: column; 
+        flex-direction: column;
         align-items: flex-start;
         gap: var(--spacing-lg);
     }
@@ -669,7 +636,7 @@ button:hover, .button:hover {
         flex-grow: 1;
     }
     .line-count {
-        width: 100%; 
+        width: 100%;
         text-align: left;
         margin-bottom: var(--spacing-sm);
     }
@@ -691,5 +658,128 @@ button:hover, .button:hover {
     .paste-tools,
     .footer {
         display: none;
+    }
+}
+
+textarea,
+pre,
+code,
+.line-numbers,
+.hljs,
+.line-numbers-container pre {
+    font-family: var(--font-family-mono);
+}
+
+textarea {
+    background-color: #313244;
+    color: #f5e0dc;
+    border: 1.5px solid #585b70;
+    border-radius: var(--input-radius);
+    padding: 1.2rem;
+    resize: vertical;
+    font-size: 1.03rem;
+    transition: border 0.2s;
+    width: 100%;
+    min-height: 250px;
+}
+
+textarea:focus {
+    outline: none;
+    border-color: #cba6f7;
+    box-shadow: 0 0 0 2px #b4befe33;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.form-group label {
+    color: #bac2de;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.form-group select,
+.form-group input[type="password"] {
+    padding: 0.8rem;
+    border: 1.5px solid #45475a;
+    border-radius: var(--input-radius);
+    background-color: #313244;
+    color: #f2cdcd;
+    font-size: 1rem;
+    transition: border 0.2s;
+}
+
+.form-group select:focus,
+.form-group input[type="password"]:focus {
+    border-color: #89b4fa;
+}
+
+button {
+    padding: 0.85rem 1.7rem;
+    border: none;
+    background: linear-gradient(90deg, #cba6f7 60%, #f5c2e7 100%);
+    color: #1e1e2e;
+    border-radius: var(--button-radius);
+    font-weight: bold;
+    font-size: 1.1rem;
+    cursor: pointer;
+    box-shadow: 0 2px 8px #cba6f755;
+    transition: background 0.2s, box-shadow 0.2s;
+}
+
+button:hover {
+    background: linear-gradient(90deg, #b4befe 60%, #f38ba8 100%);
+    box-shadow: 0 4px 16px #f38ba855;
+}
+
+footer {
+    text-align: center;
+    padding: 2rem 1rem 1rem;
+    font-size: 0.95rem;
+    color: #a6adc8;
+}
+
+footer a {
+    color: #f5c2e7;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 0.4rem;
+    transition: color 0.2s;
+}
+
+footer a:hover {
+    color: #b4befe;
+}
+
+footer a img {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px #1e1e2e33;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .container {
+        margin: var(--spacing-md) auto;
+        padding: var(--spacing-md);
+    }
+    header h1 {
+        font-size: 2em;
+    }
+    .main-content {
+        padding: var(--spacing-lg);
+        max-width: 100%;
+    }
+    textarea,
+    input[type="number"],
+    input[type="password"],
+    select {
+        min-height: 100px;
     }
 }
