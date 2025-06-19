@@ -1,5 +1,3 @@
-
-
 <h1 align="center">
   <img src="https://raw.githubusercontent.com/ryu-ryuk/yoru-pastebin/main/docs/assets/yoru_logo.png" width="800" alt="Yoru Pastebin Banner"/>
   <img src="https://raw.githubusercontent.com/catppuccin/catppuccin/main/assets/misc/transparent.png" height="16" width="0px"/>
@@ -30,117 +28,96 @@
   Built with <span style="color:#89b4fa;">Go</span>, backed by <span style="color:#b4befe;">PostgreSQL</span>, and deployed using <span style="color:#94e2d5;">Docker</span> + <span style="color:#fab387;">Traefik</span> on <span style="color:#f9e2af;">AWS</span>.<br/><br/>
   <em style="color:#f38ba8;">"Yoru" (夜)</em> means <em>"night"</em> in Japanese — symbolizing secure, ephemeral, and transient pastes.
 </p>
+---
 
+## ☁️ Live Demo
 
-## preview
-
-| ![Screenshot 1](/docs/assets/webui.png) | ![Screenshot 2](/docs/assets/api.png) |
-|:----------------------------------------:|:----------------------------------------:|
-|        *The WebUI for the tool*         |        *API usage*         |
-
-
-## Features
-
-* **Web UI:** Simple interface for creating and viewing pastes.
-* **API:** Programmatic access for developers to integrate Yoru into their tools.
-* **Unique, Unguessable IDs:** Securely generated paste identifiers.
-* **Configurable Expiration:** Set pastes to auto-delete after a specified time (e.g., 10m, 1h, 1d, never).
-* **Password Protection:** Encrypt paste content with a password, viewable only with correct password.
-* **Language Syntax Highlighting:** Automatic or user-specified highlighting for popular languages (Go, Rust, Python, Markdown, JSON, etc.).
-* **Developer-Friendly Viewer:** Line numbers, search with navigation, word wrap toggle, copy raw content, and copy share link.
-* **Containerized:** Easy deployment using Docker and Docker Compose.
-* **Secure Communications:** Designed for HTTPS (via Traefik in recommended deployments).
-
-## Getting Started (For Users/Developers)
-
-### Try it Live!
-
-Yoru Pastebin is deployed at: https://paste.alokranjan.me
-
-### **Local API Testing Example (`curl`)**
-
-Yes, you can absolutely test your API locally using `curl` while your Yoru Pastebin is running on `localhost:8080`.
-
-**First, ensure your Yoru Pastebin app is running locally:**
-```bash
-make start
-make run
-```
-
-**Then, open a *new* terminal window and use these `curl` commands:**
-
-#### **1. Create a Paste (POST /api/v1/pastes)**
-
-**Example 2: Plain text paste with password**
-
-```bash
-curl -X POST \
-  http://localhost:8080/api/v1/pastes \
-  -H "Content-Type: application/json" \
-  -d '{
-    "content": "This is a very secret message.",
-    "language": "plaintext",
-    "password": "bohooo"
-  }'
-```
-
-**Expected Local Output (for successful creation):**
-
-```json
-{"id":"<generated_id>","url":"http://localhost:8080/<generated_id>/"}
-```
-You can then open `http://localhost:8080/<generated_id>/` in your browser to verify it.
-
-#### **2. Retrieve a Paste (GET /api/v1/pastes/{id})**
-
-**Example 1: Retrieve a public paste**
-(Replace `<PUBLIC_PASTE_ID>` with an ID you just created without a password)
-
-```bash
-curl http://localhost:8080/api/v1/pastes/<PUBLIC_PASTE_ID>
-```
-
-**Expected Local Output (for successful retrieval):**
-
-```json
-{"id":"<PUBLIC_PASTE_ID>","content":"package main\n\nimport \"fmt\"\n\nfunc main() {\n\tfmt.Println(\"Hello from API test!\")\n}","language":"go","created_at":"2025-06-18T14:45:00Z","expires_at":"2025-06-18T14:55:00Z"}
-```
-
-**Example 2: Retrieve a password-protected paste (with correct password)**
-(Replace `<PROTECTED_PASTE_ID>` and `myapipassword` accordingly)
-
-```bash
-curl "http://localhost:8080/api/v1/pastes/<PROTECTED_PASTE_ID>?password=myapipassword"
-```
-**Important:** Double quotes are needed around the URL if it contains `?` or `&` in Bash.
-
-**Expected Local Output:** The decrypted content as JSON.
-
-**Example 3: Retrieve a password-protected paste (with incorrect password)**
-
-```bash
-curl http://localhost:8080/api/v1/pastes/<PROTECTED_PASTE_ID>?password=wrongpass
-```
-
-**Expected Local Output:**
-
-```json
-{"error":"Incorrect password."}
-```
+Yoru Pastebin is deployed and available for use at: **[https://paste.alokranjan.me](https://paste.alokranjan.me)**
 
 ---
 
-### API Reference
+## (=ﾟ▽ﾟ)/ Features
+
+* **Web UI:** Simple and intuitive interface for creating and viewing pastes.
+* **API:** Programmatic access for developers to integrate Yoru into their tools and workflows.
+* **Unique, Unguessable IDs:** Securely generated short identifiers for pastes.
+* **Configurable Expiration:** Set pastes to automatically self-destruct after a specified time (e.g., 10 minutes, 1 hour, 1 day, never).
+* **Password Protection:** Encrypt paste content with a password; content is only viewable with the correct key.
+* **Language Syntax Highlighting:** Automatic or user-specified highlighting for popular languages (Go, Rust, Python, Markdown, JSON, YAML, HTML, CSS, JavaScript, Bash, SQL, and more).
+* **Developer-Friendly Viewer:** Includes essential tools like line numbers, content search with navigation, word wrap toggle, instant copy of raw content, and quick sharing of paste links.
+* **Containerized:** Built with Docker for easy, consistent, and portable deployment across various environments.
+* **Secure Communications:** Designed for HTTPS, ensuring data privacy in transit (via Traefik in recommended deployments).
+
+---
+
+## (*^^*) Preview
+
+| Web UI                                 | API Usage                                |
+| :---------------------------------------: | :---------------------------------------: |
+| ![Web UI Screenshot](/docs/assets/webui.png) | ![API Usage Screenshot](/docs/assets/api.png) |
+| *The user-friendly interface* | *Example API interaction* |
+
+---
+
+## (＾＾；) Getting Started (For Development)
+
+### Prerequisites
+
+Ensure you have the following installed on your local machine:
+
+* **Go** (version 1.22 or higher)
+* **Docker** and **Docker Compose**
+* **`make`** (for convenient development commands)
+* **`git`**
+
+### Local Setup
+
+1.  **Clone the Repository:**
+    ```bash
+    git clone [https://github.com/ryu-ryuk/yoru-pastebin.git](https://github.com/ryu-ryuk/yoru-pastebin.git)
+    cd yoru-pastebin
+    ```
+
+2.  **Configure Database Credentials:**
+    Edit `configs/config.toml` to set your PostgreSQL connection string. Ensure the `[database]` section's `connection_string` matches the credentials you'll use for your local Docker PostgreSQL.
+
+    Example (`configs/config.toml`):
+    ```toml
+    [database]
+    connection_string = "postgres://yoru_user:your_secure_password@localhost:5432/yoru_pastebin?sslmode=disable"
+    ```
+    *(Replace `your_secure_password` with a strong password.)*
+
+3.  **Start Development Environment:**
+    Use the `Makefile` to set up and run your local environment, including the Dockerized PostgreSQL database and applying migrations.
+
+    ```bash
+    make setup
+    ```
+
+4.  **Run the Application:**
+    Once `make setup` completes, you can start your application.
+
+    ```bash
+    make run
+    ```
+    Your Yoru Pastebin will now be accessible in your browser at `http://localhost:8080`.
+
+---
+
+## (＾＾)ｂ API Reference
 
 Yoru Pastebin provides a simple RESTful API for programmatic paste creation and retrieval.
 
-**Base URL:** `https://paste.alokranjan.me/api/v1`
+**Base URL:** `https://paste.alokranjan.me/api/v1` (Remember to replace `paste.alokranjan.me` with your actual deployed domain if different).
 
 ---
 
 #### **1. Create a Paste**
 
 `POST /pastes`
+
+Creates a new paste entry in the system.
 
 **Request Body (JSON):**
 
@@ -149,7 +126,7 @@ Yoru Pastebin provides a simple RESTful API for programmatic paste creation and 
   "content": "Your paste content here.",
   "language": "plaintext",     // Optional: "go", "rust", "python", "json", "markdown", "auto", etc.
   "expires_in_minutes": 60,  // Optional: Integer, time until expiration in minutes (0 for never). Default from server config.
-  "password": "scary_pass" // Optional: If provided, paste content will be encrypted.
+  "password": "my_secret_password" // Optional: If provided, paste content will be encrypted.
 }
 ```
 
