@@ -56,6 +56,8 @@ func LoadConfig() (*Config, error) {
 	// env variables can override config file settings
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_")) // allows env vars like SERVER_PORT
+	viper.BindEnv("database.connection_string")
+	viper.BindEnv("server.port")
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
