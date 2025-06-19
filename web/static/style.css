@@ -498,15 +498,16 @@ button:hover, .button:hover {
     transform: none;
 }
 .share-box .icon-button svg {
-    display: block;
     width: 1.1em;
     height: 1.1em;
     fill: currentColor;
-
-    transform: translateY(-0.05em);
+    display: block;
+    margin-right: var(--spacing-xs);
 }
-
-
+.share-box .icon-button .button-text-feedback {
+    color: currentColor;
+    font-size: 0.9em; 
+}
 /* --- Paste Tools Section --- */
 .paste-tools {
     display: flex;

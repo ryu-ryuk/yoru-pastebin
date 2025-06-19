@@ -14,19 +14,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const timeRemainingSpan = document.getElementById('time-remaining');
     const pasteContentContainer = document.querySelector('.paste-content');
 
-    // Exit early if essential elements are missing (e.g., on index or error page)
-    if (!codeBlock) {
-        // If it's the index page, only the shareLinkInput might exist for paste.html, so
-        // don't exit if we're on the index page and don't expect a codeBlock.
-        // For paste.html, codeBlock is essential.
-        if (window.location.pathname.length > 1 && window.location.pathname !== '/password_prompt.html') {
-            return;
-        }
+    if (!codeBlock && window.location.pathname.length > 1 && window.location.pathname !== '/password_prompt.html') {
+        return;
     }
 
-    // --- Line Numbers ---
-    // The line count logic is good. It correctly splits by newline and updates the div.
-    // The scroll synchronization is also correctly implemented by attaching listeners to codeBlock.
     const updateLineNumbers = () => {
         const content = codeBlock.textContent;
         const lines = content.split('\n');
@@ -38,9 +29,6 @@ document.addEventListener('DOMContentLoaded', () => {
         lineNumbersDiv.innerHTML = numbersHtml;
         lineCountSpan.textContent = `Lines: ${lines.length}`;
 
-        // Sync scrollbar for line numbers and content
-        // Attach event listeners only once to avoid multiple listeners on subsequent calls if `updateLineNumbers` was called multiple times.
-        // It's already attached only once on DOMContentLoaded for this implementation.
         codeBlock.addEventListener('scroll', () => {
             lineNumbersDiv.scrollTop = codeBlock.scrollTop;
         });
@@ -48,16 +36,13 @@ document.addEventListener('DOMContentLoaded', () => {
             codeBlock.scrollTop = lineNumbersDiv.scrollTop;
         });
     };
-    updateLineNumbers();
+    if (codeBlock) updateLineNumbers();
 
-    // --- Syntax Highlighting (Highlight.js) ---
-    // The logic is correct. hljs.highlightElement(codeBlock) is the appropriate call for a single block.
-    if (typeof hljs !== 'undefined') {
+    if (typeof hljs !== 'undefined' && codeBlock) {
         hljs.highlightElement(codeBlock);
     }
 
-    // --- Search Functionality ---
-    let originalContent = codeBlock.textContent;
+    let originalContent = codeBlock ? codeBlock.textContent : '';
     let matches = [];
     let currentMatchIndex = -1;
 
@@ -68,33 +53,31 @@ document.addEventListener('DOMContentLoaded', () => {
             searchResultCount.textContent = '';
             matches = [];
             currentMatchIndex = -1;
-            prevMatchButton.disabled = true;
-            nextMatchButton.disabled = true;
+            if (prevMatchButton) prevMatchButton.disabled = true;
+            if (nextMatchButton) nextMatchButton.disabled = true;
             if (typeof hljs !== 'undefined') hljs.highlightElement(codeBlock);
             return;
         }
 
-        // Rebuild regex, replace existing highlights, re-highlight the entire block
         const regex = new RegExp(searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
         let highlightedContent = originalContent.replace(regex, (match) => `<span class="highlight">${match}</span>`);
 
         codeBlock.innerHTML = highlightedContent;
         if (typeof hljs !== 'undefined') hljs.highlightElement(codeBlock);
 
-        // Re-find all matches in the original content for navigation
         matches = [...originalContent.matchAll(regex)];
         searchResultCount.textContent = `${matches.length} results`;
 
         if (matches.length > 0) {
             currentMatchIndex = 0;
             scrollToMatch(currentMatchIndex);
-            prevMatchButton.disabled = false;
-            nextMatchButton.disabled = false;
+            if (prevMatchButton) prevMatchButton.disabled = false;
+            if (nextMatchButton) nextMatchButton.disabled = false;
         } else {
             currentMatchIndex = -1;
             searchResultCount.textContent = '0 results';
-            prevMatchButton.disabled = true;
-            nextMatchButton.disabled = true;
+            if (prevMatchButton) prevMatchButton.disabled = true;
+            if (nextMatchButton) nextMatchButton.disabled = true;
         }
     };
 
@@ -103,62 +86,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const allHighlights = codeBlock.querySelectorAll('.highlight');
         if (allHighlights.length > 0) {
-            // Remove active class from previously active highlight
             const currentActive = codeBlock.querySelector('.highlight.active');
             if (currentActive) {
                 currentActive.classList.remove('active');
             }
 
-            // Add active class to the target highlight
             const targetHighlight = allHighlights[index];
             targetHighlight.classList.add('active');
-
-            // Scroll the code block to make the target highlight visible
             targetHighlight.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
             searchResultCount.textContent = `${index + 1}/${matches.length} results`;
         }
     };
 
-    // Search Navigation Logic
     const navigateSearch = (direction) => {
         if (matches.length === 0) return;
-
         let newIndex = currentMatchIndex + direction;
-
-        if (newIndex < 0) {
-            newIndex = matches.length - 1; // Wrap around to end
-        } else if (newIndex >= matches.length) {
-            newIndex = 0; // Wrap around to beginning
-        }
-
+        if (newIndex < 0) newIndex = matches.length - 1;
+        else if (newIndex >= matches.length) newIndex = 0;
         currentMatchIndex = newIndex;
         scrollToMatch(currentMatchIndex);
     };
 
-    // Event Listeners for Search and Navigation
-    searchButton.addEventListener('click', performSearch);
-    prevMatchButton.addEventListener('click', () => navigateSearch(-1));
-    nextMatchButton.addEventListener('click', () => navigateSearch(1));
+    if (searchButton) searchButton.addEventListener('click', performSearch);
+    if (prevMatchButton) prevMatchButton.addEventListener('click', () => navigateSearch(-1));
+    if (nextMatchButton) nextMatchButton.addEventListener('click', () => navigateSearch(1));
+    if (searchInput) {
+        searchInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') performSearch();
+        });
+    }
 
-    searchInput.addEventListener('keyup', (e) => {
-        if (e.key === 'Enter') {
-            performSearch();
-        }
-        // No live search preview here, as noted it can be performance intensive
-    });
-
-    // Initialize nav buttons as disabled on page load
-    prevMatchButton.disabled = true;
-    nextMatchButton.disabled = true;
-
-    // --- Toggle Word Wrap ---
-    toggleWrapButton.addEventListener('click', () => {
-        pasteContentContainer.classList.toggle('wrap-enabled');
-    });
-
-    // --- Copy Raw Content ---
-    // Helper for button feedback
     const setButtonFeedback = (buttonElement, originalText, successText, errorText, isSuccess) => {
         const textSpan = buttonElement.querySelector('.button-text-feedback');
         if (!textSpan) return;
@@ -184,14 +142,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 .then(() => {
                     setButtonFeedback(copyButton, 'Copy Raw', 'Copied!', 'Error!', true);
                 })
-                .catch(err => {
-                    console.error('Failed to copy text: ', err);
+                .catch(() => {
                     setButtonFeedback(copyButton, 'Copy Raw', 'Copied!', 'Error!', false);
                 });
         });
     }
 
-    // --- Expiration Countdown ---
+    if (toggleWrapButton) {
+        toggleWrapButton.addEventListener('click', () => {
+            pasteContentContainer.classList.toggle('wrap-enabled');
+        });
+    }
+
     if (timeRemainingSpan) {
         const expiryTimeStr = timeRemainingSpan.dataset.expiry;
         const expiryTime = new Date(expiryTimeStr);
@@ -199,7 +161,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const updateCountdown = () => {
             const now = new Date();
             const diff = expiryTime.getTime() - now.getTime();
-
             if (diff <= 0) {
                 timeRemainingSpan.textContent = 'Expired';
                 clearInterval(countdownInterval);
@@ -224,9 +185,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const countdownInterval = setInterval(updateCountdown, 1000);
     }
 
-    // --- Copy Share Link ---
-    // The previous implementation used innerHTML manipulation for SVG icons.
-    // Let's adapt it to use the new setButtonFeedback helper.
     if (copyShareLinkButton && shareLinkInput) {
         copyShareLinkButton.addEventListener('click', () => {
             shareLinkInput.select();
@@ -236,19 +194,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 .then(() => {
                     setButtonFeedback(copyShareLinkButton, 'Copy Link', 'Copied!', 'Error!', true);
                 })
-                .catch(err => {
-                    console.error('Failed to copy share link: ', err);
+                .catch(() => {
                     setButtonFeedback(copyShareLinkButton, 'Copy Link', 'Copied!', 'Error!', false);
                 });
         });
     }
 
-    // Initial highlight (ensure this is called after line numbers and all setup)
-    // This is already being called once after DOMContentLoaded listener.
-    // hljs.highlightElement(codeBlock) is called within performSearch too.
-    // No redundant call needed here if performSearch or page load causes initial highlight.
-    // However, if no search is performed, this ensures initial highlight.
-    if (typeof hljs !== 'undefined' && codeBlock) { // Check codeBlock again to be safe
+    if (typeof hljs !== 'undefined' && codeBlock) {
         hljs.highlightElement(codeBlock);
     }
 });
