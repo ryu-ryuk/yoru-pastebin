@@ -28,6 +28,7 @@
   Built with <span style="color:#89b4fa;">Go</span>, backed by <span style="color:#b4befe;">PostgreSQL</span>, and deployed using <span style="color:#94e2d5;">Docker</span> + <span style="color:#fab387;">Traefik</span> on <span style="color:#f9e2af;">AWS</span>.<br/><br/>
   <em style="color:#f38ba8;">"Yoru" (夜)</em> means <em>"night"</em> in Japanese — symbolizing secure, ephemeral, and transient pastes.
 </p>
+
 ---
 
 ## ☁️ Live Demo
@@ -236,3 +237,7 @@ Contributions are welcome! If you have suggestions for improvements, bug fixes, 
 ## License
 
 This project is licensed under the [**GNU General Public License v3.0 (GPLv3)**](https://www.gnu.org/licenses/gpl-3.0.html).
+
+> 🐾 The entire interface is styled using [Catppuccin Mocha](https://github.com/catppuccin/catppuccin), a beautiful pastel color palette for the modern dark aesthetic.
+
+
