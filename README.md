@@ -25,7 +25,7 @@ A fast, secure, and ephemeral pastebin service built with Go, PostgreSQL, and Do
 
 ### Try it Live!
 
-Yoru Pastebin is deployed at: `[paste.alokranjan.me](paste.alokranjan.me)`
+Yoru Pastebin is deployed at: https://paste.alokranjan.me
 
 ### **Local API Testing Example (`curl`)**
 
