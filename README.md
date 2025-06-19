@@ -104,7 +104,7 @@ curl http://localhost:8080/api/v1/pastes/<PROTECTED_PASTE_ID>?password=wrongpass
 
 Yoru Pastebin provides a simple RESTful API for programmatic paste creation and retrieval.
 
-**Base URL:** `https://localhost:8080/api/v1`
+**Base URL:** `https://paste.alokranjan.me/api/v1`
 
 ---
 
@@ -136,7 +136,7 @@ Yoru Pastebin provides a simple RESTful API for programmatic paste creation and 
 
 ```bash
 curl -X POST \
-  https://localhost:8080/api/v1/pastes \
+  https://paste.alokranjan.me/api/v1/pastes \
   -H "Content-Type: application/json" \
   -d '{
     "content": "func main() {\n  fmt.Println(\"Hello, API!\")\n}",
@@ -149,7 +149,7 @@ curl -X POST \
 
 ```bash
 curl -X POST \
-  https://localhost:8080/api/v1/pastes \
+  https://paste.alokranjan.me/api/v1/pastes \
   -H "Content-Type: application/json" \
   -d '{
     "content": "This is very sensitive data.",
@@ -163,7 +163,7 @@ curl -X POST \
 ```json
 {
   "id": "aBcD1eFg",
-  "url": "[http://paste.alokranjan.me/aBcD1eFg/](http://paste.alokranjan.me/aBcD1eFg/)"
+  "url": "http://paste.alokranjan.me/aBcD1eFg/"
 }
 ```
 
@@ -190,13 +190,13 @@ Other error codes include `413 Request Entity Too Large`, `500 Internal Server E
 **Example Request (public paste):**
 
 ```bash
-curl "http://localhost:8080/api/v1/pastes/aBcD1eFg"
+curl "http://paste.alokranjan.me/api/v1/pastes/aBcD1eFg"
 ```
 
 **Example Request (password-protected paste):**
 
 ```bash
-curl "http://localhost:8080/api/v1/pastes/xYz1w2uV?password=supersecurepassword123"
+curl "http://paste.alokranjan.me/api/v1/pastes/xYz1w2uV?password=supersecurepassword123"
 ```
 
 **Successful Response (HTTP 200 OK):**
@@ -221,14 +221,8 @@ curl "http://localhost:8080/api/v1/pastes/xYz1w2uV?password=supersecurepassword1
 Other error codes include `401 Unauthorized` (for incorrect password), `500 Internal Server Error`.
 
 
-# docker setup | to be updated
-```sh
-docker run --name yoru-postgres \
-  -e POSTGRES_USER=ryu \
-  -e POSTGRES_PASSWORD=pass \
-  -e POSTGRES_DB=yoru_pastebin \
-  -p 5432:5432 \
-  -d postgres:16-alpine
+# setup | to be updated
+```
 ```
 
 
