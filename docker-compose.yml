@@ -6,6 +6,8 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
       DATABASE_CONNECTION_STRING: ${DATABASE_CONNECTION_STRING}
       SERVER_PORT: ${SERVER_PORT}
@@ -21,6 +23,8 @@ services:
   db: 
     image: postgres:16-alpine
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -33,6 +37,8 @@ services:
   traefik:
     image: traefik:v2.10
     restart: unless-stopped
+    env_file:
+      - .env
     command:
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
