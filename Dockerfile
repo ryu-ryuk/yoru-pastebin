@@ -31,7 +31,7 @@ COPY --from=builder /yoru-pastebin .
 COPY configs/ config/
 COPY web/templates/ web/templates/
 COPY web/static/ web/static/
-
+COPY db/migrations/ db/migrations/
 # Expose the port your server listens on (from config.toml:8080)
 EXPOSE 8080
 
