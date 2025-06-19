@@ -1,6 +1,36 @@
-# Yoru Pastebin
 
-A fast, secure, and ephemeral pastebin service built with Go, PostgreSQL, and Docker.
+
+<h1 align="center">
+  <img src="https://raw.githubusercontent.com/ryu-ryuk/yoru-pastebin/main/docs/assets/yoru_logo.png" width="800" alt="Yoru Pastebin Banner"/>
+  <img src="https://raw.githubusercontent.com/catppuccin/catppuccin/main/assets/misc/transparent.png" height="16" width="0px"/>
+  
+  <span style="color:#cdd6f4;">Yoru Pastebin</span>
+</h1>
+
+<h6 align="center" style="color:#bac2de;">
+  A fast, secure, and ephemeral pastebin service.
+</h6>
+
+<p align="center">
+  <a href="https://github.com/ryu-ryuk/yoru-pastebin/stargazers"><img src="https://img.shields.io/github/stars/ryu-ryuk/yoru-pastebin?colorA=1e1e2e&colorB=cba6f7&style=for-the-badge&logo=github&logoColor=cdd6f4"></a><a href="https://github.com/ryu-ryuk/yoru-pastebin/issues"><img src="https://img.shields.io/github/issues/ryu-ryuk/yoru-pastebin?colorA=1e1e2e&colorB=f38ba8&style=for-the-badge&logo=github&logoColor=cdd6f4"></a><a href="https://github.com/ryu-ryuk/yoru-pastebin/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-GPLv3-89b4fa?style=for-the-badge&logo=gnu&logoColor=1e1e2e&colorA=1e1e2e"></a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Go-1.22+-89b4fa?style=for-the-badge&logo=go&logoColor=white&colorA=1e1e2e" />
+  <img src="https://img.shields.io/badge/PostgreSQL-DB-b4befe?style=for-the-badge&logo=postgresql&logoColor=white&colorA=1e1e2e" />
+  <img src="https://img.shields.io/badge/Built_with-Docker-94e2d5?style=for-the-badge&logo=docker&logoColor=white&colorA=1e1e2e" />
+  <img src="https://img.shields.io/badge/Proxy-Traefik-fab387?style=for-the-badge&logo=traefikmesh&logoColor=white&colorA=1e1e2e" />
+  <img src="https://img.shields.io/badge/Hosted_on-AWS-f9e2af?style=for-the-badge&logo=amazonaws&logoColor=white&colorA=1e1e2e" />
+  <img src="https://img.shields.io/badge/Maintained-Yes-89b4fa?style=for-the-badge&logo=github&logoColor=white&colorA=1e1e2e" />
+</p>
+
+
+<p align="center" style="color:#a6adc8; font-size: 14.5px; line-height: 1.6; max-width: 700px; margin: auto;">
+  <strong style="color:#cdd6f4;">Yoru Pastebin</strong> is a robust, privacy-focused pastebin for developers to securely share code, logs, and confidential info.<br/>
+  Built with <span style="color:#89b4fa;">Go</span>, backed by <span style="color:#b4befe;">PostgreSQL</span>, and deployed using <span style="color:#94e2d5;">Docker</span> + <span style="color:#fab387;">Traefik</span> on <span style="color:#f9e2af;">AWS</span>.<br/><br/>
+  <em style="color:#f38ba8;">"Yoru" (夜)</em> means <em>"night"</em> in Japanese — symbolizing secure, ephemeral, and transient pastes.
+</p>
+
 
 ## preview
 
