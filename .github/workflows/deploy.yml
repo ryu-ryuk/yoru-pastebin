@@ -17,12 +17,13 @@ jobs:
           echo "${{ secrets.EC2_SSH_KEY }}" > web-server.pem
           chmod 600 web-server.pem
 
-      - name: Add VM to known_hosts
-        run: ssh-keyscan -H ${{ secrets.VM_HOST }} >> ~/.ssh/known_hosts
-
-      - name: Test SSH connection
+      - name: Setup SSH directory and known_hosts
         run: |
-          ssh -i web-server.pem -o StrictHostKeyChecking=no -vvv ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} "echo SSH connection successful"
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          touch ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+          ssh-keyscan -H ${{ secrets.VM_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy
         run: |
