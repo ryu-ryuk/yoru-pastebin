@@ -521,7 +521,7 @@ func (s *Server) apiCreatePaste() http.HandlerFunc {
 
 		apiRespondJSON(w, http.StatusCreated, map[string]string{
 			"id":  newPaste.ID,
-			"url": fmt.Sprintf("http://localhost:%d/%s/", s.config.Server.Port, newPaste.ID), // TODO: Adjust domain for production
+			"url": fmt.Sprintf("http://paste.alokranjan.me:%d/%s/", s.config.Server.Port, newPaste.ID), // TODO: Adjust domain for production
 		})
 	}
 }
