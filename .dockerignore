@@ -1,0 +1,9 @@
+**/*.md
+**/*.png
+**/*.jpg
+docs/
+.git/
+.gitignore
+*.pem
+*.key
+traefik-data/
