@@ -236,6 +236,37 @@ Other error codes include `401 Unauthorized` (for incorrect password), `500 Inte
 
 ---
 
+## 🗺️ Architecture Diagrams
+
+Below is a visual overview of Yoru Pastebin’s architecture, themed with Catppuccin Mocha for clarity and consistency.
+
+## Infrastructure Logic
+```mermaid
+graph LR
+    subgraph UI["User Interaction"]
+        A[Browser / Curl Client] -- HTTP Request --> B(Traefik Reverse Proxy)
+    end
+
+    subgraph INFRA["Infrastructure (Cloud VM)"]
+        B -- Route HTTP/S --> C(Yoru Pastebin App Container)
+        C -- DB Connection --> D(PostgreSQL DB Container)
+    end
+
+    %% Optional: Style the subgraph borders for emphasis
+    style UI stroke:#b4befe,stroke-width:3px
+    style INFRA stroke:#b4befe,stroke-width:3px
+
+    %% Node styles below
+    style A fill:#b4befe,stroke:#cba6f7,stroke-width:2px,color:#1e1e2e
+    style B fill:#cba6f7,stroke:#b4befe,stroke-width:2px,color:#1e1e2e
+    style C fill:#a6e3a1,stroke:#b4befe,stroke-width:2px,color:#1e1e2e
+    style D fill:#f5c2e7,stroke:#b4befe,stroke-width:2px,color:#1e1e2e
+
+```
+
+For more detailed diagrams, see [docs/architecture.md](./docs/architecture.md).
+
+
 ## Contributing
 
 Contributions are welcome! If you have suggestions for improvements, bug fixes, or new features, please feel free to contribute.
