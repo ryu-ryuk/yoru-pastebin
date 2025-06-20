@@ -81,7 +81,7 @@ Ensure you have the following installed on your local machine:
 
 1.  **Clone the Repository:**
     ```bash
-    git clone [https://github.com/ryu-ryuk/yoru-pastebin.git](https://github.com/ryu-ryuk/yoru-pastebin.git)
+    git clone https://github.com/ryu-ryuk/yoru-pastebin.git
     cd yoru-pastebin
     ```
 
