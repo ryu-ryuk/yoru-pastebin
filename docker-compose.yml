@@ -11,10 +11,21 @@ services:
       SERVER_PORT: ${SERVER_PORT}
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.yoru.rule=Host(`paste.alokranjan.me`)"
-      - "traefik.http.routers.yoru.entrypoints=websecure"
-      - "traefik.http.routers.yoru.tls=true"
-      - "traefik.http.services.yoru.loadbalancer.server.port=${SERVER_PORT}"
+
+      # API router (rate-limited)
+      - "traefik.http.routers.yoru-api.rule=Host(`paste.alokranjan.me`) && PathPrefix(`/api/`)"
+      - "traefik.http.routers.yoru-api.entrypoints=websecure"
+      - "traefik.http.routers.yoru-api.tls=true"
+      - "traefik.http.routers.yoru-api.middlewares=yoru-api-rate@file"
+      - "traefik.http.services.yoru-api.loadbalancer.server.port=${SERVER_PORT}"
+
+      # Read/UI router (rate-limited)
+      - "traefik.http.routers.yoru-read.rule=Host(`paste.alokranjan.me`)"
+      - "traefik.http.routers.yoru-read.entrypoints=websecure"
+      - "traefik.http.routers.yoru-read.tls=true"
+      - "traefik.http.routers.yoru-read.middlewares=yoru-read-rate@file"
+      - "traefik.http.services.yoru-read.loadbalancer.server.port=${SERVER_PORT}"
+
     networks:
       - web
 
