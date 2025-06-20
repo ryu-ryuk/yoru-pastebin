@@ -44,16 +44,16 @@ Each feature is tuned for modern dev workflows and secure sharing.
 
 ---
 
-* 🖥️ **Web UI:** Minimal, dark-themed interface for creating and viewing pastes.
-* ⚙️ **API Support:** RESTful API for developers and CLI tools.
-* 🔐 **Password Protection:** Encrypt content with a password for secure access.
-* ⏱️ **Expiring Pastes:** Set pastes to self-destruct (10 min / 1 hour / 1 day / never).
-* 🔑 **Secure IDs:** Random, unguessable identifiers for accessing pastes.
-* 🧠 **Syntax Highlighting:** Auto and manual language detection for over 30 languages.
-* 🧰 **Dev Tools:** Line numbers, search navigation, word wrap, copy, raw mode.
-* 📦 **Containerized:** Built with Docker, deployable in one command.
-* ☁️ **HTTPS by Default:** Secure access through Traefik reverse proxy.
-* 🌙 **Mocha Theme:** Styled for dark-mode lovers with [Catppuccin](https://github.com/catppuccin).
+* **Web UI:** Minimal, dark-themed interface for creating and viewing pastes.
+* **API Support:** RESTful API for developers and CLI tools.
+* **Password Protection:** Encrypt content with a password for secure access.
+* **Expiring Pastes:** Set pastes to self-destruct (10 min / 1 hour / 1 day / never).
+* **Secure IDs:** Random, unguessable identifiers for accessing pastes.
+* **Syntax Highlighting:** Auto and manual language detection for over 30 languages.
+* **Dev Tools:** Line numbers, search navigation, word wrap, copy, raw mode.
+* **Containerized:** Built with Docker, deployable in one command.
+* **HTTPS by Default:** Secure access through Traefik reverse proxy.
+* **Mocha Theme:** Styled for dark-mode lovers with [Catppuccin](https://github.com/catppuccin).
 
 ---
 
