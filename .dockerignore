@@ -1,6 +1,4 @@
 **/*.md
-**/*.png
-**/*.jpg
 docs/
 .git/
 .gitignore
