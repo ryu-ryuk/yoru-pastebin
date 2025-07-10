@@ -6,3 +6,4 @@ traefik/letsencrypt/acme.json
 .venv/
 venv/
 DEPLOYMENT.md
+data/
