@@ -12,8 +12,6 @@ services:
 # | ▓▓                                 
 # | ▓▓                                 
 #  \▓▓                                 
-
-
   yoru-pastebin:
     build:
       context: .
@@ -30,54 +28,66 @@ services:
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - AWS_S3_BUCKET=${AWS_S3_BUCKET}
+      - LOG_LEVEL=info
+      - TZ=Asia/Kolkata
     volumes:
-      # Mount for file storage (if not using S3)
       - ./data/uploads:/app/uploads:rw
-      # Mount for logs
       - ./logs:/app/logs:rw
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:${SERVER_PORT}/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+      test: ["CMD-SHELL", "curl -fsSL http://localhost:${SERVER_PORT}/health || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     labels:
-      # Traefik configuration for API routes
       - "traefik.enable=true"
-      - "traefik.http.routers.yoru-api.rule=Host(`${BASE_URL:-paste.alokranjan.me}`) && PathPrefix(`/api/`)"
+
+      # API route
+      #
+      - "traefik.http.routers.yoru-api.rule=Host(`paste.alokranjan.me`) && PathPrefix(`/api/`)"
       - "traefik.http.routers.yoru-api.entrypoints=websecure"
       - "traefik.http.routers.yoru-api.tls=true"
       - "traefik.http.routers.yoru-api.tls.certresolver=letsencrypt"
       - "traefik.http.routers.yoru-api.service=yoru-pastebin"
-      
-      # Traefik configuration for web routes
-      - "traefik.http.routers.yoru-web.rule=Host(`${BASE_URL:-paste.alokranjan.me}`)"
+
+      # Web route
+      - "traefik.http.routers.yoru-web.rule=Host(`paste.alokranjan.me`)"
       - "traefik.http.routers.yoru-web.entrypoints=websecure"
       - "traefik.http.routers.yoru-web.tls=true"
       - "traefik.http.routers.yoru-web.tls.certresolver=letsencrypt"
       - "traefik.http.routers.yoru-web.service=yoru-pastebin"
-      
-      # Service configuration
-      - "traefik.http.services.yoru-pastebin.loadbalancer.server.port=${SERVER_PORT}"
-      
-      # Security headers middleware
-      - "traefik.http.routers.yoru-api.middlewares=security-headers"
-      - "traefik.http.routers.yoru-web.middlewares=security-headers"
-      
+
+      # Loadbalancer config
+      - "traefik.http.services.yoru-pastebin.loadbalancer.server.port=8080"
+
+      # Shared middlewares
+      - "traefik.http.routers.yoru-api.middlewares=security-headers,rate-limit"
+      - "traefik.http.routers.yoru-web.middlewares=security-headers,rate-limit"
+
       # Rate limiting
+      - "traefik.http.middlewares.rate-limit.ratelimit.average=30"
       - "traefik.http.middlewares.rate-limit.ratelimit.burst=50"
+
     networks:
       - web
       - internal
     security_opt:
       - no-new-privileges:true
-    user: "1000:1000"  # as a non root user
+    user: "1000:1000"
     read_only: true
     tmpfs:
       - /tmp
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+
 
   # ---------------------------------------------------------------------------
   # PostgreSQL Database
@@ -106,7 +116,6 @@ services:
       - internal
     security_opt:
       - no-new-privileges:true
-    user: "999:999"  # Run as postgres user
     command: >
       postgres
       -c shared_preload_libraries=pg_stat_statements
@@ -128,40 +137,37 @@ services:
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
       - --providers.docker.network=web
-      
+
       # File provider for static config
       - --providers.file.directory=/etc/traefik/dynamic
       - --providers.file.watch=true
-      
+
       # Entry points
       - --entrypoints.web.address=:80
       - --entrypoints.websecure.address=:443
-      
+
       # HTTP to HTTPS redirect
       - --entrypoints.web.http.redirections.entrypoint.to=websecure
       - --entrypoints.web.http.redirections.entrypoint.scheme=https
-      
+
       # Let's Encrypt
-      - --certificatesresolvers.letsencrypt.acme.email=${TLS_CERT_EMAIL}
-      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
-      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
-      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
-      
+
+
       # API and dashboard
       - --api.dashboard=false
       - --api.insecure=false
-      
+
       # Access logs
       - --accesslog=true
       - --accesslog.filepath=/var/log/traefik-access.log
-      
+
       # Traefik logs
       - --log.level=INFO
       - --log.filepath=/var/log/traefik.log
-      
+
       # Metrics
       - --metrics.prometheus=true
-      
+
     ports:
       - "80:80"
       - "443:443"
@@ -170,13 +176,13 @@ services:
       - ./traefik/letsencrypt:/letsencrypt:rw
       - ./traefik/dynamic:/etc/traefik/dynamic:ro
       - ./traefik/logs:/var/log:rw
+      - ./traefik/certs:/certs:ro
     labels:
       # Dashboard configuration (password protected)
       - "traefik.enable=true"
       - "traefik.http.routers.traefik.entrypoints=websecure"
       - "traefik.http.routers.traefik.tls=true"
-      - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
-      
+
     networks:
       - web
     security_opt:
@@ -263,14 +269,4 @@ networks:
 # =============================================================================
 volumes:
   db_data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./data/postgres
   redis_data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./data/redis
