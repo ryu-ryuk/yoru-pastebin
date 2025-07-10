@@ -1,77 +1,155 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Yoru Pastebin</title>
-  <link rel="stylesheet" href="/static/style.css" />
-  <link rel="icon" type="image/png" href="/static/favicon.png" />
-
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Yoru</title>
+    <link rel="stylesheet" href="/static/style.css" />
+    <link rel="icon" type="image/png" href="/static/favicon.png" />
 </head>
-
 <body>
-  <div class="container">
-    <header>
-      <h1>Yoru Pastebin</h1>
-      <hr class="dotted-hr">
-      <p class="tagline">Simple, secure, and ephemeral text sharing.</p>
-    </header>
+    <div id="sakura-container" class="sakura-container"></div>
+    <div class="page-container">
+        <div class="form-component">
+            <header class="form-header">
+                <div class="zen-title-wrapper">
+                    <div class="particle aura aura1"></div>
+                    <div class="particle aura aura2"></div>
 
-    <main>
-      <form action="/" method="post" class="paste-form">
-        <textarea name="content" rows="15" placeholder="Paste your text here..." required autofocus></textarea>
+                    <h1 class="zen-title">
+                        <span class="zen-highlight">Yoru</span> <span class="h1-fade">Pastebin</span>
+                    </h1>
+                </div>
+                <p class="subtitle">securely share text snippets and files.</p>
 
-        <div class="form-group">
-          <label for="language">Language Syntax:</label>
-          <select name="language" id="language">
-            <option value="plaintext">Plain Text</option>
-            <option value="auto">Auto-detect</option>
-            <option value="go">Go</option>
-            <option value="rust">Rust</option>
-            <option value="python">Python</option>
-            <option value="javascript">JavaScript</option>
-            <option value="typescript">TypeScript</option>
-            <option value="html">HTML</option>
-            <option value="css">CSS</option>
-            <option value="json">JSON</option>
-            <option value="yaml">YAML</option>
-            <option value="markdown">Markdown</option>
-            <option value="bash">Bash / Shell</option>
-            <option value="sql">SQL</option>
-          </select>
+            </header>
+
+
+            <main class="form-body">
+                <form action="/" method="post" enctype="multipart/form-data">
+                    <div class="tabs">
+                        <button type="button" class="tab-button active" data-tab="text">Text</button>
+                        <button type="button" class="tab-button" data-tab="file">File</button>
+                    </div>
+
+                    <div id="text-panel" class="tab-panel active">
+                        <div class="textarea-container">
+                            <textarea name="content" id="content-input" rows="12" placeholder="Paste your text here..."></textarea>
+                            <div class="textarea-footer">
+                                <span id="char-counter" class="char-counter">0 characters</span>
+                                <span id="detected-language" class="detected-language"></span>
+                            </div>
+                        </div>
+                        <div class="form-options">
+                            <div class="form-group">
+                                <label for="language">Language</label>
+                                <select name="language" id="language">
+                                    <option value="auto">Auto-Detect</option>
+                                    <option value="plaintext">Plain Text</option>
+                                    <option value="bash">Bash</option>
+                                    <option value="c">C</option>
+                                    <option value="cpp">C++</option>
+                                    <option value="csharp">C#</option>
+                                    <option value="css">CSS</option>
+                                    <option value="dart">Dart</option>
+                                    <option value="diff">Diff</option>
+                                    <option value="dockerfile">Dockerfile</option>
+                                    <option value="elixir">Elixir</option>
+                                    <option value="go">Go</option>
+                                    <option value="graphql">GraphQL</option>
+                                    <option value="haskell">Haskell</option>
+                                    <option value="html">HTML</option>
+                                    <option value="java">Java</option>
+                                    <option value="javascript">JavaScript</option>
+                                    <option value="json">JSON</option>
+                                    <option value="kotlin">Kotlin</option>
+                                    <option value="lua">Lua</option>
+                                    <option value="makefile">Makefile</option>
+                                    <option value="markdown">Markdown</option>
+                                    <option value="nginx">Nginx</option>
+                                    <option value="objectivec">Objective-C</option>
+                                    <option value="perl">Perl</option>
+                                    <option value="php">PHP</option>
+                                    <option value="python">Python</option>
+                                    <option value="r">R</option>
+                                    <option value="ruby">Ruby</option>
+                                    <option value="rust">Rust</option>
+                                    <option value="scss">SCSS</option>
+                                    <option value="shell">Shell</option>
+                                    <option value="sql">SQL</option>
+                                    <option value="swift">Swift</option>
+                                    <option value="typescript">TypeScript</option>
+                                    <option value="vim">Vim</option>
+                                    <option value="xml">XML</option>
+                                    <option value="yaml">YAML</option>
+                                </select>
+                            </div>
+				<div class="form-group">
+					<label for="password">Password</label>
+					<div style="display: flex; gap: 0.5rem;">
+						<input type="password" name="password" id="password" placeholder="Optional" style="flex: 1;">
+						<button type="button" id="toggle-password" class="button" style="padding: 0 0.75rem;">👁 show</button>
+					</div>
+				</div>
+
+                        </div>
+                    </div>
+
+                    <div id="file-panel" class="tab-panel">
+                        <input type="file" name="file" id="file-input" style="display: none;" />
+                        <label for="file-input" class="drop-zone">
+                            <span class="drop-zone-prompt">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"></path></svg>
+                                <strong>Click to upload</strong> or drag & drop
+                                <small>Max file size: 20MB</small>
+                                <small style="color: var(--text-secondary); font-size: 0.8rem;">Lower limit to keep the service free</small>
+                            </span>
+                            <div class="drop-zone-preview" style="display: none;"></div>
+                        </label>
+                    </div>
+
+                    <footer class="form-footer">
+                        <div class="form-group">
+                            <label for="expires">Expires In</label>
+                            <select name="expires_in_minutes" id="expires">
+                                <option value="10">10 Minutes</option>
+                                <option value="60">1 Hour</option>
+                                <option value="1440" selected>1 Day (Default)</option>
+                                <option value="10080">1 Week</option>
+                                <option value="0">Never</option>
+                            </select>
+                            <small style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.25rem; display: block;">
+                                Default 24h expiration helps keep this service free
+                            </small>
+                        </div>
+                        <button type="submit" class="button button-primary">Create Paste</button>
+                    </footer>
+                </form>
+            </main>
         </div>
+    <div id="cursor-toggle" title="toggle cursor effect">
+        <span class="emoji">🌸</span>
+    </div>
 
-        <div class="form-group">
-          <label for="expires">Expires in:</label>
-          <select name="expires_in_minutes" id="expires">
-            <option value="0">Never</option>
-            <option value="10">10 Minutes</option>
-            <option value="60">1 Hour</option>
-            <option value="1440">1 Day</option>
-            <option value="10080">1 Week</option>
-            <option value="43200">1 Month</option>
-          </select>
+    <footer class="site-footer">
+        <div class="footer-content">
+            <a href="https://github.com/ryu-ryuk/yoru-pastebin" target="_blank" class="github-link">
+                <img src="/static/favicon.png" alt="logo" width="16" height="16" />
+                <span>source</span>
+            </a>
+            <span>&copy; {{ .CurrentYear }} <strong>Yoru Pastebin</strong></span>
+            <span>built with <span class="go-tag">go</span></span>
         </div>
+    </footer>
 
-        <div class="form-group">
-          <label for="password">Password (optional):</label>
-          <input type="password" name="password" id="password" placeholder="Enter password for encryption">
-        </div>
 
-        <button type="submit">Create Paste</button>
-      </form>
-    </main>
-  </div>
+    </div>
 
-  <footer class="footer">
-    <p>
-      &copy; {{ .CurrentYear }} <strong style="color:#cba6f7;">Yoru Pastebin</strong> — Built with <span style="color:#89b4fa;">Go</span>.
-      <br/>
-      <a href="https://github.com/ryu-ryuk/yoru-pastebin" target="_blank">
-        <img src="/static/favicon.png" alt="yoru logo" />
-        <span>view source on GitHub</span>
-      </a>
-    </p>
-  </footer>
+    <!-- core highlight.js -->
+    <script src="/static/hj/highlight.min.js"></script>
+
+
+	<script src="/static/script.js" type="module"></script>
 </body>
 </html>
