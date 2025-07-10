@@ -25,7 +25,6 @@ jobs:
           ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} '
             cd /home/ryu/yoru-pastebin &&
             git pull &&
-            docker build -t yoru-pastebin:latest . &&
-            docker stack deploy -c docker-compose.prod.yml yoru
+            ./dp.sh
           '
 
