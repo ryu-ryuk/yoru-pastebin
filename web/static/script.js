@@ -7,9 +7,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const toggle = document.getElementById('cursor-toggle');
 	const sakuraContainer = document.getElementById('sakura-container');
-	let sakuraEnabled = true;
+	let sakuraEnabled = false; // Disabled by default
 
 	function createSakuraPetals(count = 15) {
+		// Clear existing petals first
+		sakuraContainer.innerHTML = '';
+		
 		for (let i = 0; i < count; i++) {
 			const petal = document.createElement('img');
 			petal.src = '/static/sakura.png';
@@ -21,19 +24,34 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	}
 
-	if (sakuraEnabled) {
-		sakuraContainer.style.display = 'block';
-		createSakuraPetals();
-		toggle.classList.add('active');
+	// Initialize sakura state (disabled by default)
+	if (sakuraContainer) {
+		sakuraContainer.style.display = 'none';
+	}
+	if (toggle) {
+		toggle.classList.remove('active');
 	}
 
-	toggle.onclick = () => {
-		sakuraEnabled = !sakuraEnabled;
-		sakuraContainer.style.display = sakuraEnabled ? 'block' : 'none';
-		toggle.classList.toggle('active', sakuraEnabled);
+	if (toggle) {
+		toggle.onclick = () => {
+			sakuraEnabled = !sakuraEnabled;
+			
+			if (sakuraContainer) {
+				sakuraContainer.style.display = sakuraEnabled ? 'block' : 'none';
+			}
+			
+			toggle.classList.toggle('active', sakuraEnabled);
 
-		if (sakuraEnabled) createSakuraPetals();
-	};
+			if (sakuraEnabled) {
+				createSakuraPetals();
+			} else {
+				// Clear petals when disabled
+				if (sakuraContainer) {
+					sakuraContainer.innerHTML = '';
+				}
+			}
+		};
+	}
 });
 
 function initHomePage() {
@@ -513,24 +531,26 @@ async function initPastePage() {
 				currentMatchIndex = -1;
 				return;
 			}
-			// TODO: render syntax highlighting ??
-			codeBlock.innerHTML = originalHTML; // reset before applying highlights
 
+			// Reset to original content first
+			codeBlock.innerHTML = originalHTML;
+
+			// Escape special regex characters
 			const safeTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-			const regex = new RegExp(safeTerm, 'gi');
-			let matchIdx = 0;
-
-			const highlighted = codeBlock.innerHTML.replace(regex, match =>
-				`<mark data-idx="${matchIdx++}">${match}</mark>`
-			);
+			const regex = new RegExp(`(${safeTerm})`, 'gi');
+			
+			// Replace all matches with highlighted versions
+			let matchCount = 0;
+			const highlighted = codeBlock.innerHTML.replace(regex, (match) => {
+				return `<mark data-idx="${matchCount++}">${match}</mark>`;
+			});
 
 			codeBlock.innerHTML = highlighted;
 			matches = Array.from(codeBlock.querySelectorAll('mark'));
 
-			if (matches.length) {
+			if (matches.length > 0) {
 				currentMatchIndex = 0;
 				updateActiveMatch();
-				searchResultCount.textContent = `1/${matches.length} results`;
 			} else {
 				currentMatchIndex = -1;
 				searchResultCount.textContent = '0 results';
@@ -580,12 +600,14 @@ async function initPastePage() {
 				navigateSearch(1);
 			}
 		});
-		prevMatchButton.addEventListener('click', () => navigateSearch(-1));
-		nextMatchButton.addEventListener('click', () => navigateSearch(1));
+		
+		// Add event listeners (remove duplicates)
 		if (searchButton) searchButton.addEventListener('click', performSearch);
 		if (prevMatchButton) prevMatchButton.addEventListener('click', () => navigateSearch(-1));
 		if (nextMatchButton) nextMatchButton.addEventListener('click', () => navigateSearch(1));
+		
 		if (searchInput) {
+			searchInput.addEventListener('input', performSearch); // Use 'input' for real-time search
 			searchInput.addEventListener('keyup', (e) => {
 				if (e.key === 'Enter') performSearch();
 			});
