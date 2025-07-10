@@ -1,9 +1,12 @@
 services:
-  yoru-pastebin:
+  yoru:
+    image: yoru-pastebin:latest
     build:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
+    deploy:
+      replicas: 2  # load balancing target
     env_file:
       - .env
     environment:
@@ -11,21 +14,12 @@ services:
       SERVER_PORT: ${SERVER_PORT}
     labels:
       - "traefik.enable=true"
-
-      # main UI
       - "traefik.http.routers.yoru.rule=Host(`paste.alokranjan.me`)"
       - "traefik.http.routers.yoru.entrypoints=websecure"
       - "traefik.http.routers.yoru.tls=true"
       - "traefik.http.routers.yoru.middlewares=security-headers@file"
-      - "traefik.http.routers.yoru.service=yoru-pastebin"
-      - "traefik.http.services.yoru-pastebin.loadbalancer.server.port=${SERVER_PORT}"
-
-      # api paths (optional)
-      - "traefik.http.routers.yoru-api.rule=Host(`paste.alokranjan.me`) && PathPrefix(`/api/`)"
-      - "traefik.http.routers.yoru-api.entrypoints=websecure"
-      - "traefik.http.routers.yoru-api.tls=true"
-      - "traefik.http.routers.yoru-api.middlewares=security-headers@file"
-      - "traefik.http.routers.yoru-api.service=yoru-pastebin"
+      - "traefik.http.routers.yoru.service=yoru-svc"
+      - "traefik.http.services.yoru-svc.loadbalancer.server.port=${SERVER_PORT}"
     networks:
       - web
 
