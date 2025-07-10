@@ -1,0 +1,52 @@
+#  ▀█▀ █▀▄ ▄▀▄ ██▀ █▀ █ █▄▀
+#   █  █▀▄ █▀█ █▄▄ █▀ █ █ █
+
+tls:
+  certificates:
+    - certFile: /certs/cert.pem
+      keyFile: /certs/cert.key
+      stores:
+        - default
+
+http:
+  middlewares:
+    # Security headers
+    security-headers:
+      headers:
+        frameDeny: true
+        sslRedirect: true
+        browserXssFilter: true
+        contentTypeNosniff: true
+        forceSTSHeader: true
+        stsIncludeSubdomains: true
+        stsPreload: true
+        stsSeconds: 31536000
+
+        customRequestHeaders:
+          X-Forwarded-Proto: "https"
+        customResponseHeaders:
+          X-Frame-Options: "DENY"
+          X-Content-Type-Options: "nosniff"
+          Referrer-Policy: "strict-origin-when-cross-origin"
+          X-Robots-Tag: "noindex,nofollow"
+
+        contentSecurityPolicy: |
+          default-src 'self';
+          script-src 'self' 'unsafe-inline';
+          style-src 'self' 'unsafe-inline';
+          img-src 'self' data:;
+          font-src 'self';
+          connect-src 'self';
+          frame-ancestors 'none';
+          base-uri 'self';
+          form-action 'self';
+
+    # Rate limiting
+    rate-limit:
+      rateLimit:
+        average: 10
+        burst: 20
+        period: "1m"
+        sourceCriterion:
+          ipStrategy:
+            depth: 1
