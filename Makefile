@@ -1,11 +1,11 @@
 .PHONY: setup start_db stop_db rm_db clean_db migrate_create migrate_up run build test clean help prod-setup prod-deploy prod-status backup restore
 
-# Variables
-DB_USER=ryu
-DB_PASS=pass
-DB_NAME=yoru_pastebin
-DB_HOST=localhost
-DB_PORT=5432
+# Variables - use environment variables if set, otherwise use defaults
+DB_USER ?= $(if $(POSTGRES_USER),$(POSTGRES_USER),ryu)
+DB_PASS ?= $(if $(POSTGRES_PASSWORD),$(POSTGRES_PASSWORD),pass)
+DB_NAME ?= $(if $(POSTGRES_DB),$(POSTGRES_DB),yoru_pastebin)
+DB_HOST ?= $(if $(POSTGRES_HOST),$(POSTGRES_HOST),localhost)
+DB_PORT ?= $(if $(POSTGRES_PORT),$(POSTGRES_PORT),5432)
 DB_CONTAINER_NAME=yoru-postgres
 DB_CONNECTION_STRING=postgres://$(DB_USER):$(DB_PASS)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=disable
 
@@ -60,13 +60,30 @@ migrate_up:
 	@echo "Applying database migrations..."
 	# Ensure migrate CLI tool is available
 	$(GO_CMD) install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
-	# Run migrations using full path
-	$(HOME)/go/bin/migrate -path $(MIGRATE_PATH) -database "$(DB_CONNECTION_STRING)" up
+	# Run migrations using correct path
+	$(HOME)/.local/share/go/bin/migrate -path $(MIGRATE_PATH) -database "$(DB_CONNECTION_STRING)" up
 	
-# Run the Go application
+# Run the Go application for local development
 run:
-	@echo "Running Yoru Pastebin..."
+	@echo "Running Yoru Pastebin (local development)..."
+	@echo "Using local database configuration..."
+	DATABASE_CONNECTION_STRING="$(DB_CONNECTION_STRING)" \
+	SERVER_PORT=8000 \
+	BASE_URL="http://localhost:8081" \
 	$(GO_CMD) run $(MAIN_APP)
+
+# Run the Go application using production environment variables
+run-prod:
+	@echo "Running Yoru Pastebin (production mode)..."
+	@echo "Using .env file for configuration..."
+	@if [ -f .env ]; then \
+		export $$(grep -v '^#' .env | xargs) && \
+		DATABASE_CONNECTION_STRING="postgres://$$POSTGRES_USER:$$POSTGRES_PASSWORD@$$POSTGRES_HOST:$$POSTGRES_PORT/$$POSTGRES_DB?sslmode=disable" \
+		$(GO_CMD) run $(MAIN_APP); \
+	else \
+		echo "Error: .env file not found!"; \
+		exit 1; \
+	fi
 
 # Build the Go application binary
 build:
