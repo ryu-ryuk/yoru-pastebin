@@ -65,13 +65,15 @@ func LoadConfig() (*Config, error) {
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_")) // allows env vars like SERVER_PORT
 
-	viper.BindEnv("database.connection_string")
-	viper.BindEnv("server.port")
+	viper.BindEnv("database.connection_string", "DATABASE_CONNECTION_STRING")
+	viper.BindEnv("server.port", "SERVER_PORT")
+	viper.BindEnv("server.base_url", "BASE_URL")
 
-	viper.BindEnv("s3.bucket")
-	viper.BindEnv("s3.region")
-	viper.BindEnv("s3.access_key_id")
-	viper.BindEnv("s3.secret_access_key")
+	// Bind S3 configuration to AWS environment variables
+	viper.BindEnv("s3.bucket", "AWS_S3_BUCKET")
+	viper.BindEnv("s3.region", "AWS_REGION")
+	viper.BindEnv("s3.access_key_id", "AWS_ACCESS_KEY_ID")
+	viper.BindEnv("s3.secret_access_key", "AWS_SECRET_ACCESS_KEY")
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
@@ -93,6 +95,16 @@ func LoadConfig() (*Config, error) {
 	}
 	if cfg.Paste.IDLength <= 0 {
 		return nil, fmt.Errorf("paste ID length must be positive")
+	}
+
+	if cfg.S3.Bucket == "" {
+		fmt.Println("WARNING: S3 bucket not configured - file uploads will fail")
+	}
+	if cfg.S3.AccessKeyID == "" || cfg.S3.SecretAccessKey == "" {
+		fmt.Println("WARNING: S3 credentials not configured - file uploads will fail")
+	}
+	if cfg.S3.Region == "" {
+		fmt.Println("WARNING: S3 region not configured - file uploads will fail")
 	}
 
 	return &cfg, nil
