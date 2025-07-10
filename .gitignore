@@ -7,3 +7,6 @@ traefik/letsencrypt/acme.json
 venv/
 DEPLOYMENT.md
 data/
+yoru-pastebin
+yoru
+main

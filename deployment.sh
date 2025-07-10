@@ -7,7 +7,7 @@ docker build -t yoru-pastebin:latest .
 echo "📤 pushing image to local docker engine..."
 # push for  a registry
 
-echo "🚀 redeploying stack..."
+echo " 💭 redeploying stack..."
 if ! docker service update --force yoru_yoru 2>/dev/null; then
   echo "⚠️  service update failed, removing and redeploying..."
   docker service rm yoru_yoru
