@@ -1,6 +1,6 @@
 
 <h1 align="center">
-  <img src="https://raw.githubusercontent.com/ryu-ryuk/yoru-pastebin/main/docs/assets/yoru_logo.png" width="800" alt="Yoru Pastebin Banner"/>
+  <img src="https://raw.githubusercontent.com/ryu-ryuk/yoru-pastebin/main/docs/assets/yoru.png" width="800" alt="Yoru Pastebin Banner"/>
   <img src="https://raw.githubusercontent.com/catppuccin/catppuccin/main/assets/misc/transparent.png" height="16" width="0px"/>
   
   <span style="color:#cdd6f4;">Yoru Pastebin</span>
