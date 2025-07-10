@@ -1,2 +1,7 @@
 .env
 config.toml
+traefik/letsencrypt/acme.json
+*.pem
+*.key
+.venv/
+venv/

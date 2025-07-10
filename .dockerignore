@@ -5,3 +5,6 @@ docs/
 *.pem
 *.key
 traefik-data/
+.venv/
+venv/
+traefik/
