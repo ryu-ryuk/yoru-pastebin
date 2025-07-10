@@ -118,13 +118,12 @@ func (s *Server) setupRoutes() *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /", s.handleIndex())
 	mux.HandleFunc("POST /", s.handleCreatePaste())
-	
-	// Handle both with and without trailing slash for paste URLs
+
 	mux.HandleFunc("GET /{id}", s.handleGetPasteRedirect())
 	mux.HandleFunc("GET /{id}/", s.handleGetPaste())
 	mux.HandleFunc("POST /{id}/", s.handleGetPaste())
 	mux.HandleFunc("GET /file/{id}/download", s.handleFileDownload())
-	
+
 	mux.HandleFunc("POST /api/v1/pastes", s.apiCreatePaste())
 	mux.HandleFunc("GET /api/v1/pastes/{id}", s.apiGetPaste())
 	mux.HandleFunc("GET /health", s.handleHealth())
