@@ -3,84 +3,165 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Paste - {{ .Paste.ID }}</title>
+    <title>{{if .Paste.IsFile}}Download {{.Paste.FileName}}{{else}}Paste {{.Paste.ID}}{{end}} - Yoru</title>
     <link rel="stylesheet" href="/static/style.css">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text x=%2250%%22 y=%2250%%22 style=%22dominant-baseline:central;text-anchor:middle;font-size:90px;%22>📄</text></svg>">
-    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
-    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/typescript.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/xml.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/css.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/markdown.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/sql.min.js"></script>
     <link rel="icon" type="image/png" href="/static/favicon.png" />
+    <link rel="stylesheet" href="/static/hj/catppuccin-mocha.min.css">
 </head>
 <body>
-    <div class="container">
-        <header class="header">
-            <div class="header-top">
-                <a href="/" class="button create-new-button">Create New Paste</a>
-                <h1 class="paste-id-title">Paste ID: {{ .Paste.ID }}</h1>
-                </div>
-            <p class="tagline">
-                Created: {{ .Paste.CreatedAt.Format "January 02, 2006 15:04 MST" }}
-                {{ if .Paste.ExpiresAt }}
-                    | Expires: <span id="time-remaining" data-expiry="{{ .Paste.ExpiresAt.Format "2006-01-02T15:04:05Z07:00" }}"></span>
-                {{ else }}
-                    | Does not expire
-                {{ end }}
-                {{ if .Paste.IsProtected }}
-                    | <span class="prot ected">Password Protected</span>
-                {{ end }}
-                <span class="language-info">Language: {{ .Paste.Language }}</span>
-            </p>
-            <div class="share-box">
-                <input type="text" id="shareLinkInput" value="https://paste.alokranjan.me/{{ .Paste.ID }}/" readonly>
-                <button id="copyShareLinkButton" class="button secondary-button icon-button" title="Copy paste URL">
-                <span class="button-text-feedback">Copy Link</span> </button>
-            </div>
-        </header>
+    <div class="page-container">
+        <div class="paste-component">
+            <header class="paste-header">
+                <a href="/" class="logo-link">Yoru</a>
 
-        <main class="main-content">
-            <div class="paste-tools">
-                <div class="search-box">
-                    <input type="text" id="searchInput" placeholder="Search paste content...">
-                    <button id="searchButton" class="search-button">Search</button>
-                    <span id="searchResultCount" class="search-count"></span>
+                <div class="paste-meta">
+                    {{if not .Paste.IsFile}}
+                    <span>{{.Paste.Language}}</span>
+                    {{if .Paste.IsProtected}}<span>Protected</span>{{end}}
+                    {{else}}
+                    <span>File Paste</span>
+                    {{end}}
                 </div>
-                <div class="tools-right">
-                    <span id="lineCount" class="line-count">Lines: 0</span>
-                    <button id="toggleWrap" class="button secondary-button">Toggle Wrap</button>
-                    <button id="copyButton" class="button secondary-button">Copy Raw</button>
-                    <button id="prevMatchButton" class="button secondary-button">Prev</button>
-                    <button id="nextMatchButton" class="button secondary-button">Next</button>
-                </div>
-            </div>
 
-            <div class="paste-content line-numbers-container">
-                <div class="line-numbers" aria-hidden="true"></div>
-                <pre><code class="language-{{ .Paste.Language | js }}">{{ .Paste.Content }}</code></pre>
-            </div>
+                <div class="header-actions">
+                    {{if .Paste.IsFile}}
+                    <a href="/{{ .Paste.ID }}/" class="button button-primary">Download</a>
+                    {{else}}
+                    <button id="copyButton" class="button button-primary">Copy Raw</button>
+                    {{end}}
+
+                    <a href="/" class="button new-paste-button">New Paste</a>
+                </div>
+            </header>
+
+
+            <main class="paste-body">
+                {{if .Paste.IsFile}}
+                <div class="file-download-view">
+                    <svg class="file-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2ZM18 20H6V4H13V9H18V20Z"></path></svg>
+                    <span class="file-name">{{.Paste.FileName}}</span>
+                    <span class="file-meta-details">{{.Paste.MimeType}} &bull; {{.Paste.FileSize | FormatFileSize}}</span>
+                </div>
+                {{else}}
+                <div class="share-link-section">
+                    <label for="shareLinkInput">Share Link:</label>
+                    <div class="share-link-container">
+                        <input type="text" id="shareLinkInput" value="https://paste.alokranjan.me/{{.Paste.ID}}/" readonly>
+                        <button id="copyShareLinkButton" class="button button-secondary">
+                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+                                <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+                            </svg>
+                            Copy
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="text-view-wrapper">
+                    <div class="paste-toolbar">
+                        <div class="search-box">
+                            <input type="text" id="searchInput" placeholder="Search paste content...">
+                            <button id="searchButton" class="search-button">Search</button>
+                            <span id="searchResultCount" class="search-count"></span>
+                            <div class="search-nav">
+                                <button id="prevMatchButton" class="search-nav-button" title="Previous match">&larr;</button>
+                                <button id="nextMatchButton" class="search-nav-button" title="Next match">&rarr;</button>
+                            </div>
+                        </div>
+                        <div class="view-tools">
+                            <button type="button" id="toggleWrap" class="button">Toggle Wrap</button>
+                        </div>
+                    </div>
+                    <div class="code-view-container">
+                        <div class="line-numbers" aria-hidden="true"></div>
+			<pre><code class="language-{{ .Paste.Language | js }}">{{ .Paste.Content | html }}</code></pre>
+                    </div>
+                </div>
+                {{end}}
             </main>
 
-        <footer>
-            <p>
-            &copy; {{ .CurrentYear }} <strong style="color:#cba6f7;">Yoru Pastebin</strong> — Built with <span style="color:#89b4fa;">Go</span>.
-            <br/>
-            <a href="https://github.com/ryu-ryuk/yoru-pastebin" target="_blank">
-                <img src="/static/favicon.png" alt="yoru logo" />
-                <span>view source on GitHub</span>
+            <footer class="paste-footer">
+                <div class="expiration-info">
+                    {{if .Paste.ExpiresAt}}
+                    Expires: <span id="time-remaining" data-expiry="{{.Paste.ExpiresAt.Format "2006-01-02T15:04:05Z07:00"}}"></span>
+                    {{else}}
+                    <span>Never Expires</span>
+                    {{end}}
+                </div>
+                <div class="line-info" {{if .Paste.IsFile}}style="display: none;"{{end}}>
+                    <span id="lineCount">0</span> lines
+                </div>
+            </footer>
+        </div>
+
+    <footer class="site-footer">
+        <div class="footer-content">
+            <a href="https://github.com/ryu-ryuk/yoru-pastebin" target="_blank" class="github-link">
+                <img src="/static/favicon.png" alt="logo" width="16" height="16" />
+                <span>source</span>
             </a>
-            </p>
-        </footer>
+            <span>&copy; {{ .CurrentYear }} <strong>Yoru Pastebin</strong></span>
+            <span>built with <span class="go-tag">go</span></span>
+        </div>
+    </footer>
     </div>
     <script src="/static/script.js"></script>
+    <!-- core highlight.js -->
+    <script src="/static/hj/highlight.min.js"></script>
+
+    <!-- Only load the language we need -->
+    <script>
+        // Language mapping for common aliases to avoid 404s
+        const langMap = {
+            'html': 'xml',
+            'htm': 'xml', 
+            'xhtml': 'xml',
+            'jsx': 'javascript',
+            'tsx': 'typescript',
+            'py': 'python',
+            'sh': 'bash',
+            'zsh': 'bash',
+            'fish': 'bash'
+        };
+        
+        // Get the language from the code block
+        const codeBlock = document.querySelector('pre code[class^="language-"]');
+        if (codeBlock) {
+            const langClass = codeBlock.className.match(/language-([\w-]+)/);
+            const lang = langClass?.[1] || 'plaintext';
+            const actualLang = langMap[lang] || lang;
+            
+            // Only load this specific language if it's not plaintext
+            if (actualLang && actualLang !== 'plaintext') {
+                const script = document.createElement('script');
+                script.src = `/static/hj/languages/${actualLang}.min.js`;
+                script.onload = () => {
+                    // Language loaded, now highlight
+                    try {
+                        hljs.highlightElement(codeBlock);
+                    } catch (error) {
+                        console.warn('Highlighting failed:', error);
+                    }
+                };
+                script.onerror = () => {
+                    console.warn(`Language file not found: ${actualLang}, using auto-detection`);
+                    try {
+                        hljs.highlightElement(codeBlock);
+                    } catch (error) {
+                        console.warn('Auto-detection highlighting failed:', error);
+                    }
+                };
+                document.head.appendChild(script);
+            } else {
+                // No specific language or plaintext, just highlight
+                try {
+                    hljs.highlightElement(codeBlock);
+                } catch (error) {
+                    console.warn('Basic highlighting failed:', error);
+                }
+            }
+        }
+    </script>
+
 </body>
 </html>
