@@ -5,50 +5,35 @@ document.addEventListener('DOMContentLoaded', () => {
 		initPastePage();
 	}
 
-	const toggle = document.getElementById('cursor-toggle');
+	// --- Sakura Animation Toggle ---
+	const sakuraToggle = document.getElementById('cursor-toggle');
 	const sakuraContainer = document.getElementById('sakura-container');
-	let sakuraEnabled = false; // Disabled by default
-
+	let sakuraEnabled = false;
 	function createSakuraPetals(count = 15) {
-		// Clear existing petals first
 		sakuraContainer.innerHTML = '';
-		
 		for (let i = 0; i < count; i++) {
 			const petal = document.createElement('img');
 			petal.src = '/static/sakura.png';
 			petal.className = 'sakura-petal';
-			petal.style.left = Math.random() * 100 + 'vw';
-			petal.style.top = Math.random() * -100 + 'px';
-			petal.style.animationDelay = (Math.random() * 10) + 's';
+	        petal.style.left = Math.random() * 100 + 'vw';
+	        petal.style.top = Math.random() * -100 + 'px';
+	        petal.style.animationDelay = (Math.random() * 10) + 's';
 			sakuraContainer.appendChild(petal);
 		}
 	}
-
-	// Initialize sakura state (disabled by default)
-	if (sakuraContainer) {
-		sakuraContainer.style.display = 'none';
-	}
-	if (toggle) {
-		toggle.classList.remove('active');
-	}
-
-	if (toggle) {
-		toggle.onclick = () => {
+	if (sakuraContainer) sakuraContainer.style.display = 'none';
+	if (sakuraToggle) sakuraToggle.classList.remove('active');
+	if (sakuraToggle) {
+		sakuraToggle.onclick = () => {
 			sakuraEnabled = !sakuraEnabled;
-			
 			if (sakuraContainer) {
 				sakuraContainer.style.display = sakuraEnabled ? 'block' : 'none';
 			}
-			
-			toggle.classList.toggle('active', sakuraEnabled);
-
+			sakuraToggle.classList.toggle('active', sakuraEnabled);
 			if (sakuraEnabled) {
 				createSakuraPetals();
 			} else {
-				// Clear petals when disabled
-				if (sakuraContainer) {
-					sakuraContainer.innerHTML = '';
-				}
+				sakuraContainer.innerHTML = '';
 			}
 		};
 	}
@@ -425,6 +410,67 @@ function initHomePage() {
 			passwordField.type = type;
 			toggle.textContent = type === "text" ? "hide" : "show";
 		});
+	}
+
+	// Sakura mascot popup logic
+	const mascotPopup = document.getElementById('sakura-mascot-popup');
+	const mascotMessage = document.getElementById('mascot-message');
+	const sakuraToggle = document.getElementById('cursor-toggle');
+
+	const mascotMessages = [
+	    "Hey there! 🌸 Paste something cool!",
+	    "Did you know? Yoru loves privacy!",
+	    "Try the sakura animation! Click the flower!",
+	    "You can paste files too, not just text!",
+	    "Catppuccin theme is the best, right?",
+	    "Stay hydrated and write code! 💧",
+	    "Share your paste with friends!",
+	    "Yoru is open source! Check GitHub!",
+	    "Paste expires? Set it to never!",
+	    "You can search inside your paste! 🔍"
+	];
+	let mascotIndex = 0;
+	let mascotTypingTimeout = null;
+	let mascotCycleTimeout = null;
+
+	function typeMascotMessage(msg, i = 0) {
+	    mascotMessage.textContent = '';
+	    if (i < msg.length) {
+	        mascotMessage.textContent = msg.slice(0, i + 1);
+	        mascotTypingTimeout = setTimeout(() => typeMascotMessage(msg, i + 1), 40 + Math.random() * 40);
+	    } else {
+	        mascotTypingTimeout = null;
+	    }
+	}
+
+	function showMascotPopup() {
+	    if (mascotPopup) mascotPopup.style.display = 'flex';
+	    typeMascotMessage(mascotMessages[mascotIndex]);
+	    mascotCycleTimeout = setTimeout(nextMascotMessage, 5000);
+	}
+
+	function nextMascotMessage() {
+	    mascotIndex = (mascotIndex + 1) % mascotMessages.length;
+	    typeMascotMessage(mascotMessages[mascotIndex]);
+	    mascotCycleTimeout = setTimeout(nextMascotMessage, 5000 + Math.random() * 2000);
+	}
+
+	function hideMascotPopup() {
+	    if (mascotPopup) mascotPopup.style.display = 'none';
+	    if (mascotTypingTimeout) clearTimeout(mascotTypingTimeout);
+	    if (mascotCycleTimeout) clearTimeout(mascotCycleTimeout);
+	}
+
+	// Only show on index page
+	if (mascotPopup && mascotMessage && document.querySelector('.form-component')) {
+	    setTimeout(showMascotPopup, 2500); // show after 2.5s
+	    // Hide on paste creation or navigation
+	    document.querySelector('form')?.addEventListener('submit', hideMascotPopup);
+	    // Clicking the mascot bubble cycles messages
+	    mascotPopup.addEventListener('click', () => {
+	        mascotIndex = Math.floor(Math.random() * mascotMessages.length);
+	        typeMascotMessage(mascotMessages[mascotIndex]);
+	    });
 	}
 }
 
