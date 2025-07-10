@@ -1,13 +1,12 @@
-package config 
+package config
 
 import (
 	"fmt"
-	"time"
 	"strings"
+	"time"
 
 	"github.com/spf13/viper"
 )
-
 
 // this holds the configuration for the application.
 type Config struct {
@@ -15,11 +14,13 @@ type Config struct {
 	Database DatabaseConfig `mapstructure:"database"`
 	Paste    PasteConfig    `mapstructure:"paste"`
 	Security SecurityConfig `mapstructure:"security"`
+	S3       S3Config       `mapstructure:"s3"`
 }
 
 // holds server-related settings.
 type ServerConfig struct {
-	Port int `mapstructure:"port"`
+	Port    int    `mapstructure:"port"`
+	BaseURL string `mapstructure:"base_url"`
 }
 
 // holds database-related settings.
@@ -29,22 +30,29 @@ type DatabaseConfig struct {
 
 // holds paste-related settings.
 type PasteConfig struct {
-	IDLength                int `mapstructure:"id_length"`
+	IDLength                 int `mapstructure:"id_length"`
 	DefaultExpirationMinutes int `mapstructure:"default_expiration_minutes"`
-	MaxContentSizeBytes     int `mapstructure:"max_content_size_bytes"`
+	MaxContentSizeBytes      int `mapstructure:"max_content_size_bytes"`
 }
 
 // holds security-related settings.
 type SecurityConfig struct {
-	BcryptCost        int `mapstructure:"bcrypt_cost"`
+	BcryptCost         int `mapstructure:"bcrypt_cost"`
 	RateLimitPerSecond int `mapstructure:"rate_limit_per_second"`
+}
+
+type S3Config struct {
+	Bucket          string `mapstructure:"bucket"`
+	Region          string `mapstructure:"region"`
+	AccessKeyID     string `mapstructure:"access_key_id"`
+	SecretAccessKey string `mapstructure:"secret_access_key"`
 }
 
 // this will read configuration from file or environment variables.
 func LoadConfig() (*Config, error) {
 	viper.AddConfigPath("./configs") //  config.toml
-	viper.SetConfigName("config")    
-	viper.SetConfigType("toml")      
+	viper.SetConfigName("config")
+	viper.SetConfigType("toml")
 
 	viper.SetDefault("server.port", 8080)
 	viper.SetDefault("paste.id_length", 8)
@@ -56,8 +64,14 @@ func LoadConfig() (*Config, error) {
 	// env variables can override config file settings
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_")) // allows env vars like SERVER_PORT
+
 	viper.BindEnv("database.connection_string")
 	viper.BindEnv("server.port")
+
+	viper.BindEnv("s3.bucket")
+	viper.BindEnv("s3.region")
+	viper.BindEnv("s3.access_key_id")
+	viper.BindEnv("s3.secret_access_key")
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
