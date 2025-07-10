@@ -15,6 +15,8 @@ services:
     image: yoru-pastebin:latest
     deploy:
       replicas: 2
+      restart_policy:
+        condition: on-failure
     env_file:
       - .env
     volumes:
@@ -32,7 +34,9 @@ services:
 
   db:
     image: postgres:16-alpine
-    restart: unless-stopped
+    deploy:
+      restart_policy:
+        condition: on-failure
     env_file:
       - .env
     volumes:
@@ -42,7 +46,9 @@ services:
 
   traefik:
     image: traefik:v2.10
-    restart: unless-stopped
+    deploy:
+      restart_policy:
+        condition: on-failure
     command:
       - --providers.docker=true
       - --providers.file.directory=/etc/traefik/dynamic
@@ -69,7 +75,7 @@ networks:
     name: yoru_web
 
 volumes:
-  db_data:  
+  db_data:
 
 #yoru-pastebin:
 #     build:
