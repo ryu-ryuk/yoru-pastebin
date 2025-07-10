@@ -8,19 +8,17 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	awsconfig "github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/credentials"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/ryu-ryuk/yoru/internal/config"
 	"github.com/ryu-ryuk/yoru/internal/database"
 	"github.com/ryu-ryuk/yoru/internal/paste"
 	"github.com/ryu-ryuk/yoru/pkg/crypt"
 	"github.com/ryu-ryuk/yoru/pkg/idgen"
+	"github.com/ryu-ryuk/yoru/pkg/storage"
 )
 
 const (
@@ -39,31 +37,41 @@ type PageData struct {
 }
 
 type Server struct {
-	httpServer      *http.Server
-	config          *config.Config
-	pasteRepo       paste.Repository
-	templates       *template.Template
-	s3Client        *s3.Client
-	s3PresignClient *s3.PresignClient
-	baseURL         string
+	httpServer *http.Server
+	config     *config.Config
+	pasteRepo  paste.Repository
+	templates  *template.Template
+	storage    storage.Storage
+	baseURL    string
 }
 
 func NewServer(cfg *config.Config, db *database.DB) *Server {
 	repo := paste.NewPGRepository(db.Pool)
 	tmpl := mustInitTemplates()
-	s3Client := mustInitS3(cfg)
-	baseURL := cfg.Server.BaseURL
-	// if baseURL == "" {
-	// 	baseURL = fmt.Sprintf("https://%s", cfg.Server.Host)
-	// }
+
+	// Initialize hybrid storage
+	storageInstance, err := storage.NewHybridStorage(
+		storage.S3Config{
+			Bucket:          cfg.S3.Bucket,
+			Region:          cfg.S3.Region,
+			AccessKeyID:     cfg.S3.AccessKeyID,
+			SecretAccessKey: cfg.S3.SecretAccessKey,
+		},
+		"./data/uploads",   // local storage directory
+		cfg.Server.BaseURL, // base URL for constructing download links
+	)
+	if err != nil {
+		log.Fatalf("Failed to initialize storage: %v", err)
+	}
+
+	log.Printf("Storage initialized: %s", storageInstance.GetStorageInfo())
 
 	return &Server{
-		config:          cfg,
-		pasteRepo:       repo,
-		templates:       tmpl,
-		s3Client:        s3Client,
-		s3PresignClient: s3.NewPresignClient(s3Client),
-		baseURL:         baseURL,
+		config:    cfg,
+		pasteRepo: repo,
+		templates: tmpl,
+		storage:   storageInstance,
+		baseURL:   cfg.Server.BaseURL,
 	}
 }
 
@@ -77,20 +85,6 @@ func mustInitTemplates() *template.Template {
 		log.Fatalf("template error: %v", err)
 	}
 	return tmpl
-}
-
-func mustInitS3(cfg *config.Config) *s3.Client {
-	awsCfg, err := awsconfig.LoadDefaultConfig(context.TODO(),
-		awsconfig.WithRegion(cfg.S3.Region),
-		awsconfig.WithCredentialsProvider(
-			credentials.NewStaticCredentialsProvider(cfg.S3.AccessKeyID, cfg.S3.SecretAccessKey, ""),
-		),
-	)
-	if err != nil {
-		log.Fatalf("s3 init error: %v", err)
-	}
-	log.Println("aws s3 ready")
-	return s3.NewFromConfig(awsCfg)
 }
 
 func (s *Server) Start() error {
@@ -124,11 +118,14 @@ func (s *Server) setupRoutes() *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /", s.handleIndex())
 	mux.HandleFunc("POST /", s.handleCreatePaste())
-	mux.HandleFunc("GET /{id}/", s.handleGetPaste())
-	mux.HandleFunc("POST /{id}/", s.handleGetPaste())
+	mux.HandleFunc("GET /paste/{id}/", s.handleGetPaste())
+	mux.HandleFunc("POST /paste/{id}/", s.handleGetPaste())
+	mux.HandleFunc("GET /paste/{id}/download", s.handleFileDownload())
 	mux.HandleFunc("POST /api/v1/pastes", s.apiCreatePaste())
 	mux.HandleFunc("GET /api/v1/pastes/{id}", s.apiGetPaste())
+	mux.HandleFunc("GET /health", s.handleHealth())
 
+	// Static files only
 	fs := http.FileServer(http.Dir(staticDir))
 	cachedFS := withStaticCache(http.StripPrefix("/static/", fs))
 	mux.Handle("GET /static/", cachedFS)
@@ -263,6 +260,11 @@ func (s *Server) handleCreatePaste() http.HandlerFunc {
 		hasContent := content != ""
 		hasFile := fileErr == nil
 
+		log.Printf("DEBUG: content=%s, hasContent=%v, fileErr=%v, hasFile=%v", content, hasContent, fileErr, hasFile)
+		if header != nil {
+			log.Printf("DEBUG: filename=%s, size=%d", header.Filename, header.Size)
+		}
+
 		if !hasContent && !hasFile {
 			s.renderTemplate(w, "error.html", PageData{
 				Message:    "please provide content or file",
@@ -289,14 +291,15 @@ func (s *Server) handleCreatePaste() http.HandlerFunc {
 			s3Key := fmt.Sprintf("uploads/%s/%s", id, header.Filename)
 			newPaste.S3Key = &s3Key
 
-			_, err := s.s3Client.PutObject(ctx, &s3.PutObjectInput{
-				Bucket:      aws.String(s.config.S3.Bucket),
-				Key:         aws.String(s3Key),
-				Body:        file,
-				ContentType: aws.String(newPaste.MimeType),
-				ACL:         types.ObjectCannedACLPublicRead,
+			// Upload using the storage interface
+			err := s.storage.Upload(ctx, s3Key, file, storage.FileInfo{
+				Key:          s3Key,
+				OriginalName: header.Filename,
+				Size:         header.Size,
+				ContentType:  newPaste.MimeType,
 			})
 			if err != nil {
+				log.Printf("File upload failed: %v", err)
 				s.renderTemplate(w, "error.html", PageData{Message: "upload failed", StatusCode: 500}, 500)
 				return
 			}
@@ -394,11 +397,9 @@ func (s *Server) handleGetPaste() http.HandlerFunc {
 		}
 
 		if p.IsFile {
-			url, err := s.s3PresignClient.PresignGetObject(ctx, &s3.GetObjectInput{
-				Bucket: aws.String(s.config.S3.Bucket),
-				Key:    p.S3Key,
-			}, s3.WithPresignExpires(15*time.Minute))
+			url, err := s.storage.GetDownloadURL(ctx, *p.S3Key)
 			if err != nil {
+				log.Printf("Failed to get download URL: %v", err)
 				s.renderTemplate(w, "error.html", PageData{
 					Message:     "file fetch failed",
 					StatusCode:  500,
@@ -406,7 +407,7 @@ func (s *Server) handleGetPaste() http.HandlerFunc {
 				}, 500)
 				return
 			}
-			http.Redirect(w, r, url.URL, http.StatusFound)
+			http.Redirect(w, r, url, http.StatusFound)
 			return
 		}
 
@@ -644,5 +645,99 @@ func (s *Server) apiGetPaste() http.HandlerFunc {
 			CreatedAt: p.CreatedAt,
 			ExpiresAt: p.ExpiresAt,
 		})
+	}
+}
+
+func (s *Server) handleHealth() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.Background()
+
+		health := map[string]interface{}{
+			"status":    "ok",
+			"timestamp": time.Now().Unix(),
+		}
+
+		// Check storage availability
+		if hybrid, ok := s.storage.(*storage.HybridStorage); ok {
+			health["storage"] = hybrid.GetStorageInfo()
+			health["storage_available"] = s.storage.IsAvailable(ctx)
+		} else {
+			health["storage_available"] = s.storage.IsAvailable(ctx)
+		}
+
+		// Check database connectivity
+		// We can add a simple ping to the database here if needed
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(health)
+	}
+}
+
+func (s *Server) handleFileDownload() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := r.PathValue("id")
+		if id == "" {
+			http.Error(w, "Missing paste ID", http.StatusBadRequest)
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		// Get paste record from database
+		p, err := s.pasteRepo.GetPasteByID(ctx, id)
+		if err != nil {
+			log.Printf("File download - paste not found: %v", err)
+			http.Error(w, "File not found", http.StatusNotFound)
+			return
+		}
+
+		// Check if it's actually a file paste
+		if !p.IsFile || p.S3Key == nil {
+			http.Error(w, "Not a file paste", http.StatusBadRequest)
+			return
+		}
+
+		// Check if paste has expired
+		if p.IsExpired() {
+			http.Error(w, "File has expired", http.StatusGone)
+			return
+		}
+
+		// Check storage type and serve file securely
+		// For local/hybrid storage with local fallback, serve file directly
+		filePath := filepath.Join("./data/uploads", *p.S3Key)
+
+		// Security check: ensure file path is within uploads directory
+		absPath, err := filepath.Abs(filePath)
+		if err != nil {
+			http.Error(w, "Invalid file path", http.StatusBadRequest)
+			return
+		}
+
+		uploadsDir, _ := filepath.Abs("./data/uploads")
+		if !strings.HasPrefix(absPath, uploadsDir) {
+			http.Error(w, "Access denied", http.StatusForbidden)
+			return
+		}
+
+		// Check if file exists locally (for hybrid storage that might have fallen back to local)
+		if _, err := os.Stat(absPath); err == nil {
+			// File exists locally, serve it
+			w.Header().Set("Content-Type", p.MimeType)
+			w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", p.FileName))
+			http.ServeFile(w, r, absPath)
+			return
+		}
+
+		// If file doesn't exist locally, try S3 presigned URL
+		url, err := s.storage.GetDownloadURL(ctx, *p.S3Key)
+		if err != nil {
+			log.Printf("Failed to get download URL: %v", err)
+			http.Error(w, "File not found", http.StatusNotFound)
+			return
+		}
+
+		http.Redirect(w, r, url, http.StatusFound)
 	}
 }

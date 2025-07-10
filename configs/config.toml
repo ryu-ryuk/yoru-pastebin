@@ -1,7 +1,7 @@
 # Server Configuration
 [server]
-port = 8080
-# base_url = "https://paste.alokranjan.me"
+port = 8000
+base_url = "http://localhost:8000"
 # DB Configuration
 [database]
 # For local development: "postgres://postgres:pass@localhost:5432/yoru_pastebin?sslmode=disable"
