@@ -452,14 +452,23 @@ async function initPastePage() {
 	}
 
 	const copyShareLinkButton = document.getElementById('copyShareLinkButton');
+	const copyShareLinkButtonSecondary = document.getElementById('copyShareLinkButtonSecondary');
 	const shareLinkInput = document.getElementById('shareLinkInput');
 	const timeRemainingSpan = document.getElementById('time-remaining');
 
+	// Handle main copy button in header
 	if (copyShareLinkButton && shareLinkInput) {
 		copyShareLinkButton.addEventListener('click', () => {
+			copyToClipboard(copyShareLinkButton, shareLinkInput.value, 'Copy Link');
+		});
+	}
+
+	// Handle secondary copy button next to input
+	if (copyShareLinkButtonSecondary && shareLinkInput) {
+		copyShareLinkButtonSecondary.addEventListener('click', () => {
 			shareLinkInput.select();
 			shareLinkInput.setSelectionRange(0, 99999); // For mobile
-			copyToClipboard(copyShareLinkButton, shareLinkInput.value, 'Copy');
+			copyToClipboard(copyShareLinkButtonSecondary, shareLinkInput.value, 'Copy');
 		});
 
 		// Auto-select link when clicked for easy copying

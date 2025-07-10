@@ -554,10 +554,47 @@ textarea {
 }
 
 /* File Download View */
-.file-download-view { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem; text-align: center; }
-.file-icon { width: 80px; height: 80px; color: var(--blue); margin-bottom: 1.5rem; }
-.file-name { font-size: 1.75rem; font-weight: 500; word-break: break-all; }
-.file-meta-details { color: var(--text-secondary); margin-bottom: 2rem; }
+.file-download-view { 
+    flex-grow: 1; 
+    display: flex; 
+    flex-direction: row; 
+    align-items: center; 
+    justify-content: space-between; 
+    padding: 3rem 2rem; 
+    gap: 2rem; 
+}
+.file-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-grow: 1;
+}
+.file-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+.file-icon { 
+    width: 60px; 
+    height: 60px; 
+    color: var(--blue); 
+    flex-shrink: 0;
+}
+.file-name { 
+    font-size: 1.5rem; 
+    font-weight: 500; 
+    word-break: break-all; 
+    color: var(--text);
+}
+.file-meta-details { 
+    color: var(--text-secondary); 
+    font-size: 0.9rem;
+}
+.file-download-btn {
+    flex-shrink: 0;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+}
 
 /* Text View */
 .text-view-wrapper { display: flex; flex-direction: column; flex-grow: 1; }
