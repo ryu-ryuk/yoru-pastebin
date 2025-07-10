@@ -30,12 +30,9 @@ services:
 
   db:
     image: postgres:16-alpine
+    restart: unless-stopped
     env_file:
       - .env
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - db_data:/var/lib/postgresql/data
     networks:
@@ -43,6 +40,7 @@ services:
 
   traefik:
     image: traefik:v2.10
+    restart: unless-stopped
     command:
       - --providers.docker=true
       - --providers.file.directory=/etc/traefik/dynamic
@@ -66,11 +64,10 @@ services:
 networks:
   web:
     external: true
-    name: yoru_web  
+    name: yoru_web
 
 volumes:
-  db_data:
-  
+  db_data:  
 
 #yoru-pastebin:
 #     build:
