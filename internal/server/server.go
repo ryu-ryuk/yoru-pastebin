@@ -15,6 +15,7 @@ import (
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/ryu-ryuk/yoru/internal/config"
 	"github.com/ryu-ryuk/yoru/internal/database"
 	"github.com/ryu-ryuk/yoru/internal/paste"
@@ -281,6 +282,7 @@ func (s *Server) handleCreatePaste() http.HandlerFunc {
 				Key:         aws.String(s3Key),
 				Body:        file,
 				ContentType: aws.String(newPaste.MimeType),
+				ACL:         types.ObjectCannedACLPublicRead,
 			})
 			if err != nil {
 				s.renderTemplate(w, "error.html", PageData{Message: "upload failed", StatusCode: 500}, 500)
