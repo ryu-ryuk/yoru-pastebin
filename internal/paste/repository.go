@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/jackc/pgx/v5"        // For ErrNoRows
+	"github.com/jackc/pgx/v5"         // For ErrNoRows
 	"github.com/jackc/pgx/v5/pgxpool" // For pgxpool.Pool
 )
 
@@ -18,19 +18,19 @@ type Repository interface {
 }
 
 type PGRepository struct {
-	pool *pgxpool.Pool 
+	pool *pgxpool.Pool
 }
 
 // creates a new PostgreSQL paste repository.
-func NewPGRepository(pool *pgxpool.Pool) Repository { 
+func NewPGRepository(pool *pgxpool.Pool) Repository {
 	return &PGRepository{pool: pool}
 }
 
 // inserts a new paste into the database.
 func (r *PGRepository) CreatePaste(ctx context.Context, paste *Paste) error {
 	query := `
-        INSERT INTO pastes (id, content, created_at, expires_at, password_hash, salt, encrypted_iv, language)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        INSERT INTO pastes (id, content, created_at, expires_at, password_hash, salt, encrypted_iv, language, is_file, file_name, mime_type, file_size, s3_key)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
     `
 	_, err := r.pool.Exec(
 		ctx,
@@ -43,6 +43,11 @@ func (r *PGRepository) CreatePaste(ctx context.Context, paste *Paste) error {
 		paste.Salt,
 		paste.EncryptedIV,
 		paste.Language,
+		paste.IsFile,
+		paste.FileName,
+		paste.MimeType,
+		paste.FileSize,
+		paste.S3Key,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create paste: %w", err)
@@ -54,7 +59,7 @@ func (r *PGRepository) CreatePaste(ctx context.Context, paste *Paste) error {
 func (r *PGRepository) GetPasteByID(ctx context.Context, id string) (*Paste, error) {
 	paste := &Paste{}
 	query := `
-        SELECT id, content, created_at, expires_at, password_hash, salt, encrypted_iv, language
+        SELECT id, content, created_at, expires_at, password_hash, salt, encrypted_iv, language, is_file, file_name, mime_type, file_size, s3_key
         FROM pastes
         WHERE id = $1 AND (expires_at IS NULL OR expires_at > $2)
     `
@@ -67,6 +72,11 @@ func (r *PGRepository) GetPasteByID(ctx context.Context, id string) (*Paste, err
 		&paste.Salt,
 		&paste.EncryptedIV,
 		&paste.Language,
+		&paste.IsFile,
+		&paste.FileName,
+		&paste.MimeType,
+		&paste.FileSize,
+		&paste.S3Key,
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
