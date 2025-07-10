@@ -10,21 +10,19 @@
 # | ▓▓                                 
 # | ▓▓                                 
 #  \▓▓                                 
-
 services:
   yoru:
     image: yoru-pastebin:latest
-    # build:
-    #   context: .
-    #   dockerfile: Dockerfile
-    # restart: unless-stopped
     deploy:
-      replicas: 2  # load balancing target
+      replicas: 2
     env_file:
       - .env
+    networks:
+      - web
     environment:
-      DATABASE_CONNECTION_STRING: ${DATABASE_CONNECTION_STRING}
-      SERVER_PORT: ${SERVER_PORT}
+      # remove these lines
+      # DATABASE_CONNECTION_STRING: ${DATABASE_CONNECTION_STRING}
+      # SERVER_PORT: ${SERVER_PORT}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.yoru.rule=Host(`paste.alokranjan.me`)"
@@ -32,9 +30,7 @@ services:
       - "traefik.http.routers.yoru.tls=true"
       - "traefik.http.routers.yoru.middlewares=security-headers@file"
       - "traefik.http.routers.yoru.service=yoru-svc"
-      - "traefik.http.services.yoru-svc.loadbalancer.server.port=${SERVER_PORT}"
-    networks:
-      - web
+      - "traefik.http.services.yoru-svc.loadbalancer.server.port=8080" # 8080
 
   db:
     image: postgres:16-alpine
