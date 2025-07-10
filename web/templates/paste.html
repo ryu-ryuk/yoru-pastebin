@@ -24,7 +24,7 @@
                 <div class="header-actions">
                     <button id="copyShareLinkButton" class="button button-primary prominent-copy">Copy Link</button>
                     {{if .Paste.IsFile}}
-                    <a href="/{{ .Paste.ID }}/download" class="button button-primary">Download</a>
+                    <a href="/file/{{ .Paste.ID }}/download" class="button button-primary">Download</a>
                     {{else}}
                     <button id="copyButton" class="button button-secondary">Copy Raw</button>
                     {{end}}
