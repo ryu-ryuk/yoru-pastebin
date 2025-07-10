@@ -9,6 +9,8 @@ services:
     environment:
       DATABASE_CONNECTION_STRING: ${DATABASE_CONNECTION_STRING}
       SERVER_PORT: ${SERVER_PORT}
+    ports:
+      - "8080:8080"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.yoru-api.rule=Host(`paste.alokranjan.me`) && PathPrefix(`/api/`)"
