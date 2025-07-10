@@ -4,6 +4,36 @@ document.addEventListener('DOMContentLoaded', () => {
 	} else if (document.querySelector('.paste-component')) {
 		initPastePage();
 	}
+
+	const toggle = document.getElementById('cursor-toggle');
+	const sakuraContainer = document.getElementById('sakura-container');
+	let sakuraEnabled = true;
+
+	function createSakuraPetals(count = 15) {
+		for (let i = 0; i < count; i++) {
+			const petal = document.createElement('img');
+			petal.src = '/static/sakura.png';
+			petal.className = 'sakura-petal';
+			petal.style.left = Math.random() * 100 + 'vw';
+			petal.style.top = Math.random() * -100 + 'px';
+			petal.style.animationDelay = (Math.random() * 10) + 's';
+			sakuraContainer.appendChild(petal);
+		}
+	}
+
+	if (sakuraEnabled) {
+		sakuraContainer.style.display = 'block';
+		createSakuraPetals();
+		toggle.classList.add('active');
+	}
+
+	toggle.onclick = () => {
+		sakuraEnabled = !sakuraEnabled;
+		sakuraContainer.style.display = sakuraEnabled ? 'block' : 'none';
+		toggle.classList.toggle('active', sakuraEnabled);
+
+		if (sakuraEnabled) createSakuraPetals();
+	};
 });
 
 function initHomePage() {
@@ -24,23 +54,23 @@ function initHomePage() {
 		const content = document.getElementById("content");
 		const draftKey = "paste_draft_content";
 		const languageKey = "selectedLanguage";
-		
+
 		// Initialize content and language state
 		if (content) {
 			const savedContent = localStorage.getItem(draftKey) || "";
 			const savedLanguage = localStorage.getItem(languageKey);
-			
+
 			// Restore saved content
 			content.value = savedContent;
-			
+
 			// Update character counter immediately for restored content
 			updateCharCounter();
-			
+
 			// Smart language selection logic
 			if (languageSelect) {
 				const navEntries = performance.getEntriesByType('navigation');
 				const isReload = navEntries.length && navEntries[0].type === 'reload';
-				
+
 				if (isReload) {
 					// Explicit reload - reset everything to clean state
 					languageSelect.value = 'auto';
@@ -67,12 +97,12 @@ function initHomePage() {
 					updateDetectedLanguage('');
 				}
 			}
-			
+
 			// Save content changes
 			content.addEventListener("input", () => {
 				localStorage.setItem(draftKey, content.value);
 			});
-			
+
 			// Focus the content area
 			content.focus();
 		}
@@ -84,7 +114,7 @@ function initHomePage() {
 		if (content && charCounter) {
 			const count = content.value.length;
 			charCounter.textContent = `${count.toLocaleString()} characters`;
-			
+
 			// Show warning for very large pastes
 			if (count > 100000) {
 				charCounter.style.color = 'var(--yellow)';
@@ -118,7 +148,7 @@ function initHomePage() {
 			const script = document.createElement('script');
 			script.src = `/static/hj/languages/${lang}.min.js`;
 			script.async = true;
-			
+
 			// Return a promise that resolves when the script loads
 			return new Promise((resolve, reject) => {
 				script.onload = () => resolve();
@@ -196,7 +226,7 @@ function initHomePage() {
 		// Find the language with the highest score
 		const detected = Object.entries(scores)
 			.filter(([_, score]) => score > 0)
-			.sort(([,a], [,b]) => b - a)[0];
+			.sort(([, a], [, b]) => b - a)[0];
 
 		return detected ? detected[0] : null;
 	}
@@ -211,7 +241,7 @@ function initHomePage() {
 		textInput.addEventListener('paste', async (e) => {
 			if (languageSelect.value !== 'auto') return;
 			const pastedText = (e.clipboardData || window.clipboardData).getData('text');
-			
+
 			// Use lightweight detection first
 			const detected = await detectLanguage(pastedText);
 			if (detected && languageSelect.querySelector(`option[value="${detected}"]`)) {
@@ -219,7 +249,7 @@ function initHomePage() {
 				localStorage.setItem('selectedLanguage', detected);
 				updateDetectedLanguage(detected);
 			}
-			
+
 			// Update character counter after paste
 			setTimeout(updateCharCounter, 10);
 		});
@@ -251,18 +281,18 @@ function initHomePage() {
 	// Form submission with better UX
 	if (form) {
 		const submitButton = form.querySelector('button[type="submit"]');
-		
+
 		form.addEventListener('submit', (e) => {
 			if (submitButton) {
 				submitButton.classList.add('loading');
 				submitButton.disabled = true;
 				submitButton.textContent = 'Creating...';
 			}
-			
+
 			// Basic validation feedback
 			const textContent = textInput ? textInput.value.trim() : '';
 			const fileSelected = fileInput && fileInput.files && fileInput.files.length > 0;
-			
+
 			if (!textContent && !fileSelected) {
 				e.preventDefault();
 				if (submitButton) {
@@ -270,7 +300,7 @@ function initHomePage() {
 					submitButton.disabled = false;
 					submitButton.textContent = 'Create Paste';
 				}
-				
+
 				// Show error feedback
 				const activePanel = document.querySelector('.tab-panel.active');
 				if (activePanel && activePanel.id === 'text-panel' && textInput) {
@@ -413,7 +443,7 @@ async function initPastePage() {
 			shareLinkInput.setSelectionRange(0, 99999); // For mobile
 			copyToClipboard(copyShareLinkButton, shareLinkInput.value, 'Copy');
 		});
-		
+
 		// Auto-select link when clicked for easy copying
 		shareLinkInput.addEventListener('click', () => {
 			shareLinkInput.select();
@@ -441,7 +471,7 @@ async function initPastePage() {
 	if (codeBlock) {
 		// Get original content from the code block
 		const originalContent = codeBlock.textContent || '';
-		
+
 		const lineNumbersDiv = document.querySelector('.line-numbers');
 		const lineCountSpan = document.getElementById('lineCount');
 		const codeViewContainer = document.querySelector('.code-view-container');
@@ -563,32 +593,3 @@ async function initPastePage() {
 	}
 }
 
-const toggle = document.getElementById('cursor-toggle');
-const sakuraContainer = document.getElementById('sakura-container');
-let sakuraEnabled = true;
-
-function createSakuraPetals(count = 15) {
-    for (let i = 0; i < count; i++) {
-        const petal = document.createElement('img');
-        petal.src = '/static/sakura.png';
-        petal.className = 'sakura-petal';
-        petal.style.left = Math.random() * 100 + 'vw';
-        petal.style.top = Math.random() * -100 + 'px';
-        petal.style.animationDelay = (Math.random() * 10) + 's';
-        sakuraContainer.appendChild(petal);
-    }
-}
-
-if (sakuraEnabled) {
-	sakuraContainer.style.display = 'block';
-	createSakuraPetals();
-	toggle.classList.add('active');
-}
-
-toggle.onclick = () => {
-	sakuraEnabled = !sakuraEnabled;
-	sakuraContainer.style.display = sakuraEnabled ? 'block' : 'none';
-	toggle.classList.toggle('active', sakuraEnabled);
-
-	if (sakuraEnabled) createSakuraPetals();
-};
