@@ -3,38 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yoru Pastebin - Error</title>
+    <title>yoru-err</title>
     <link rel="stylesheet" href="/static/style.css">
     <link rel="icon" type="image/png" href="/static/favicon.png" />
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text x=%2250%%22 y=%2250%%22 style=%22dominant-baseline:central;text-anchor:middle;font-size:90px;%22>❌</text></svg>">
 </head>
 <body>
-    <div class="container">
-    <header class="header">
-        <h1 class="paste-id-title">An Error Occurred</h1>
-    </header>
-        <main class="main-content">
-            <div class="error-message">
-                <p>{{ .Message }}</p>
-                {{ if .StatusCode }}
-                    <p>Status Code: {{ .StatusCode }}</p>
-                {{ end }}
-            </div>
-            <div class="actions">
-                <a href="/" class="button">Go Home</a>
-            </div>
-        </main>
+    <div class="page-container">
+        <div class="form-component" style="max-width: 600px;">
+            <header class="form-header">
+                <h1>Oops! Something went wrong</h1>
+                <p>We encountered an error while processing your request.</p>
+            </header>
+            <main class="form-body">
+                <div class="error-message" style="background: var(--surface-1); border: 1px solid var(--red); border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+                        <span style="font-size: 1.5rem;">⚠️</span>
+                        <strong style="color: var(--red);">Error Details</strong>
+                    </div>
+                    <p style="color: var(--text); margin: 0; line-height: 1.5;">{{ .Message }}</p>
+                    {{ if .StatusCode }}
+                        <p style="color: var(--text-secondary); margin: 0.5rem 0 0 0; font-size: 0.9rem;">Status Code: {{ .StatusCode }}</p>
+                    {{ end }}
+                </div>
+                <div class="actions" style="display: flex; gap: 1rem; justify-content: center;">
+                    <a href="/" class="button button-primary">Go Home</a>
+                    <button onclick="history.back()" class="button" style="background: var(--surface-1); color: var(--text);">Go Back</button>
+                </div>
+            </main>
+        </div>
 
-        <footer class="footer">
-            <div class="container">
-                <p>
-                &copy; {{ .CurrentYear }} <strong style="color:#cba6f7;">Yoru Pastebin</strong> — Built with <span style="color:#89b4fa;">Go</span>.
-                <br/>
-                <a href="https://github.com/ryu-ryuk/yoru-pastebin" target="_blank">
-                    <img src="/static/favicon.png" alt="yoru logo" />
-                    <span>view source on GitHub</span>
+        <footer class="site-footer">
+            <div class="footer-content">
+                <a href="https://github.com/ryu-ryuk/yoru-pastebin" target="_blank" class="github-link">
+                    <img src="/static/favicon.png" alt="logo" width="16" height="16" />
+                    <span>source</span>
                 </a>
-                </p>
+                <span>&copy; {{ .CurrentYear }} <strong>Yoru Pastebin</strong></span>
+                <span>built with <span class="go-tag">go</span></span>
             </div>
         </footer>
     </div>
