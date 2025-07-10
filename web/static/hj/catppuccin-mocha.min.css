@@ -1,0 +1,123 @@
+/*!
+  Theme: Catppuccin Mocha
+  Author: Catppuccin Org
+  Maintainer: @catppuccin
+  License: MIT
+  Version: v1.0.0
+*/
+
+.hljs {
+  color: #cdd6f4;
+  background: #1e1e2e;
+}
+
+.hljs-comment,
+.hljs-quote {
+  color: #7f849c;
+  font-style: italic;
+}
+
+.hljs-variable,
+.hljs-template-variable,
+.hljs-attribute,
+.hljs-tag,
+.hljs-name,
+.hljs-regexp,
+.hljs-link,
+.hljs-selector-id,
+.hljs-selector-class {
+  color: #f38ba8;
+}
+
+.hljs-number,
+.hljs-meta,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params {
+  color: #fab387;
+}
+
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet {
+  color: #a6e3a1;
+}
+
+.hljs-title,
+.hljs-section {
+  color: #89b4fa;
+}
+
+.hljs-keyword,
+.hljs-selector-tag {
+  color: #cba6f7;
+}
+
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.hljs-strong {
+  font-weight: bold;
+}
+
+.hljs-code {
+  color: #f9e2af;
+}
+
+.hljs-formula {
+  color: #f2cdcd;
+}
+
+.hljs-doctag {
+  color: #f38ba8;
+}
+
+.hljs-deletion {
+  color: #f38ba8;
+  background: rgba(243, 139, 168, 0.15);
+}
+
+.hljs-addition {
+  color: #a6e3a1;
+  background: rgba(166, 227, 161, 0.15);
+}
+
+/* Language specific colors */
+.hljs-attr {
+  color: #f9e2af;
+}
+
+.hljs-property {
+  color: #89b4fa;
+}
+
+.hljs-function {
+  color: #89b4fa;
+}
+
+.hljs-operator {
+  color: #89dceb;
+}
+
+.hljs-punctuation {
+  color: #bac2de;
+}
+
+.hljs-subst {
+  color: #f5c2e7;
+}
+
+.hljs-template-tag {
+  color: #f38ba8;
+}
+
+.hljs-class .hljs-title {
+  color: #f9e2af;
+}
+
+.hljs-variable.language_ {
+  color: #f38ba8;
+}
