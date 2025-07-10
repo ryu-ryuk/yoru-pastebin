@@ -26,11 +26,10 @@ services:
       - "traefik.http.routers.yoru.tls=true"
       - "traefik.http.routers.yoru.middlewares=security-headers@file"
       - "traefik.http.routers.yoru.service=yoru-svc"
-      - "traefik.http.services.yoru-svc.loadbalancer.server.port=8080" # 8080
+      - "traefik.http.services.yoru-svc.loadbalancer.server.port=8080"
 
   db:
     image: postgres:16-alpine
-    restart: unless-stopped
     env_file:
       - .env
     environment:
@@ -44,7 +43,6 @@ services:
 
   traefik:
     image: traefik:v2.10
-    restart: unless-stopped
     command:
       - --providers.docker=true
       - --providers.file.directory=/etc/traefik/dynamic
@@ -68,7 +66,7 @@ services:
 networks:
   web:
     external: true
-    driver: overlay
+    name: yoru_web  
 
 volumes:
   db_data:
