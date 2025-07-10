@@ -12,8 +12,15 @@ type Paste struct {
 	CreatedAt    time.Time  `json:"created_at"`
 	ExpiresAt    *time.Time `json:"expires_at,omitempty"`
 	PasswordHash *string    `json:"-"`
-	Salt         []byte     `json:"-"` 
+	Salt         []byte     `json:"-"`
 	EncryptedIV  []byte     `json:"-"`
+
+	// for file uploads
+	IsFile   bool    `db:"is_file"`
+	FileName string  `db:"file_name"`
+	MimeType string  `db:"mime_type"`
+	FileSize int64   `db:"file_size"`
+	S3Key    *string `db:"s3_key"`
 }
 
 // checks if the paste has expired.
@@ -28,3 +35,4 @@ func (p *Paste) IsExpired() bool {
 func (p *Paste) IsProtected() bool {
 	return p.PasswordHash != nil && *p.PasswordHash != ""
 }
+
