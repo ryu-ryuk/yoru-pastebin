@@ -5,3 +5,4 @@ traefik/letsencrypt/acme.json
 *.key
 .venv/
 venv/
+DEPLOYMENT.md
