@@ -1,4 +1,4 @@
-.PHONY: setup start_db stop_db rm_db clean_db migrate_create migrate_up run build test clean
+.PHONY: setup start_db stop_db rm_db clean_db migrate_create migrate_up run build test clean help prod-setup prod-deploy prod-status backup restore
 
 # Variables
 DB_USER=ryu
@@ -13,8 +13,15 @@ MIGRATE_PATH=db/migrations
 GO_CMD=go
 MAIN_APP=./cmd/yoru/main.go
 
+# Help target
+help: ## Show this help message
+	@echo "Yoru Pastebin - Available Commands:"
+	@echo ""
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@echo ""
+
 # Setup development environment (initial run)
-setup: clean_db start_db migrate_up build
+setup: clean_db start_db migrate_up build ## Setup development environment
 
 # starting the container and applying migrations
 start_db:
@@ -67,12 +74,49 @@ build:
 	$(GO_CMD) build -o yoru-pastebin $(MAIN_APP)
 
 # Run tests (placeholder)
-test:
+test: ## Run tests
 	@echo "Running tests..."
-	$(GO_CMD) test ./...
+	$(GO_CMD) test -v ./...
 
-# Clean build artifacts
-clean:
-	@echo "Cleaning build artifacts..."
-	rm -f yoru-pastebin # Removes the built binary
-	$(GO_CMD) clean
+# Production commands
+prod-setup: ## Setup production environment
+	@echo "Setting up production environment..."
+	@./deploy.sh setup
+
+prod-deploy: ## Deploy to production
+	@echo "Deploying to production..."
+	@./deploy.sh deploy
+
+prod-status: ## Show production status
+	@./deploy.sh status
+
+prod-logs: ## Show production logs
+	@./deploy.sh logs
+
+prod-restart: ## Restart production services
+	@./deploy.sh restart
+
+prod-stop: ## Stop production services
+	@./deploy.sh stop
+
+# Database operations
+backup: ## Create database backup
+	@echo "Creating database backup..."
+	@./deploy.sh backup
+
+restore: ## Restore database from backup (requires BACKUP_FILE=path)
+	@echo "Restoring database..."
+	@./deploy.sh restore $(BACKUP_FILE)
+
+# Monitoring
+health: ## Check service health
+	@./deploy.sh health
+
+# Security
+security-scan: ## Run security scan on Docker images
+	@echo "Running security scan..."
+	@docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+		aquasec/trivy image yoru-pastebin:latest
+
+# Quick commands
+quick-deploy: build prod-deploy ## Quick build and deploy
