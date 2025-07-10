@@ -92,9 +92,9 @@ make prod-status
 
 ## Documentation
 
-- **[API Reference](docs/API.md)** - Complete API documentation
-- **[Deployment Guide](DEPLOYMENT.md)** - Production deployment instructions
-- **[Architecture Overview](docs/architecture.md)** - System design and diagrams
+- **[API Reference](docs/API.md)** - Complete API documentation [To be updated]
+- **[Deployment Guide](DEPLOYMENT.md)** - Production deployment instructions [TODO]
+- **[Architecture Overview](docs/architecture.md)** - System design and diagrams [To be updated]
 
 ## Configuration
 
@@ -412,4 +412,4 @@ Licensed under the GNU General Public License v3.0. See [LICENSE](LICENSE) for d
 
 ---
 
-**Built for developers who prioritize security, performance and a whole lot of catppuccin ;) **
+**Built for developers who prioritize security, performance and a whole lot of catppuccin ;)**
