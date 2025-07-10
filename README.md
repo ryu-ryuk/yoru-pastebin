@@ -19,28 +19,13 @@
   <img src="https://img.shields.io/badge/PostgreSQL-15+-b4befe?style=for-the-badge&logo=postgresql&logoColor=white&colorA=1e1e2e" />
   <img src="https://img.shields.io/badge/Docker-Production-94e2d5?style=for-the-badge&logo=docker&logoColor=white&colorA=1e1e2e" />
   <img src="https://img.shields.io/badge/Traefik-SSL-fab387?style=for-the-badge&logo=traefikmesh&logoColor=white&colorA=1e1e2e" />
-  <img src="https://img.shields.io/badge/AWS-S3-f9e2af?style=for-the-badge&logo=amazonaws&logoColor=white&colorA=1e1e2e" />
+  <img src="https://img.shields.io/badge/File%20Storage-Hybrid-94e2d5?style=for-the-badge&logo=files&logoColor=white&colorA=1e1e2e" />
 </p>
 
-<p align="center" style="color:#a6adc8; font-size: 14.5px; line-height: 1.6; max-width: 800px; margin: auto;">
-  <strong style="color:#cdd6f4;">Yoru Pastebin</strong> is an enterprise-grade, security-hardened pastebin service designed for teams and organizations that prioritize privacy, performance, and reliability.<br/>
-  
-  🔒 <strong>Zero-knowledge architecture</strong> • 🚀 <strong>Sub-100ms response times</strong> • 📁 <strong>File upload support</strong> • 🛡️ <strong>Military-grade encryption</strong><br/>
-  
-  Built with <span style="color:#89b4fa;">Go</span>, secured by <span style="color:#b4befe;">PostgreSQL</span>, deployed via <span style="color:#94e2d5;">Docker</span>, and scaled on <span style="color:#f9e2af;">AWS</span>.<br/><br/>
-  <em style="color:#f38ba8;">"Yoru" (夜)</em> means <em>"night"</em> in Japanese — representing the ephemeral, secure nature of your data.
-</p>
-
----
 
 **A production-grade, security-hardened pastebin service built for teams and organizations.**
 
-[![GitHub stars](https://img.shields.io/github/stars/ryu-ryuk/yoru-pastebin?style=flat-square)](https://github.com/ryu-ryuk/yoru-pastebin/stargazers)
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg?style=flat-square)](https://www.gnu.org/licenses/gpl-3.0)
-[![Go version](https://img.shields.io/badge/Go-1.22+-blue.svg?style=flat-square)](https://golang.org/)
-[![Docker](https://img.shields.io/badge/Docker-Production%20Ready-blue.svg?style=flat-square)](https://docker.com/)
-
-Yoru Pastebin implements enterprise-grade security, performance optimizations, and production deployment capabilities. Built with Go, PostgreSQL, and designed for AWS cloud infrastructure.
+Yoru Pastebin implements enterprise-grade security, performance optimizations, and production deployment capabilities. Built with Go, PostgreSQL, deployed on GCP with support for hybrid cloud storage.
 
 **Live Demo:** [https://paste.alokranjan.me](https://paste.alokranjan.me)
 
@@ -63,8 +48,7 @@ Yoru Pastebin implements enterprise-grade security, performance optimizations, a
 
 ### Production Infrastructure
 - **Multi-replica deployment** with Docker Swarm/Compose
-- **Traefik reverse proxy** with automatic SSL/TLS via Let's Encrypt
-- **AWS S3 integration** for file storage (20MB max per file)
+- **Hybrid file storage** using local volumes and optional AWS S3 (20MB max per file)
 - **PostgreSQL persistence** with volume mounting
 - **Graceful shutdown** handling with 10-second timeout
 - **Health monitoring** and container orchestration
@@ -73,7 +57,7 @@ Yoru Pastebin implements enterprise-grade security, performance optimizations, a
 - **RESTful API** for programmatic access
 - **File upload support** with drag-and-drop interface
 - **35+ programming languages** with syntax highlighting
-- **Responsive web interface** with modern UI
+- **Responsive web interface** with modern catppuccin UI
 - **Comprehensive Makefile** for development workflow
 - **Database migrations** with version control
 
@@ -100,7 +84,7 @@ make run
 make prod-setup
 
 # Deploy with Docker Compose
-./deploy.sh
+./deployment.sh
 
 # Check deployment status  
 make prod-status
@@ -168,32 +152,44 @@ TLS_CERT_EMAIL=your-email@domain.com
 ```
 
 ## Architecture
-
 ### Production Infrastructure
-
 ```mermaid
 graph TB
+
+    %% define graph nodes
     subgraph "Load Balancer & SSL"
         LB[Traefik v2.10<br/>SSL Termination<br/>Rate Limiting]
     end
-    
+
     subgraph "Application Layer"
-        LB --> APP1[Yoru Instance 1<br/>Port 8080]
-        LB --> APP2[Yoru Instance 2<br/>Port 8080]
+        LB --> APP1[Yoru 1<br/>Port 8080]
+        LB --> APP2[Yoru 2<br/>Port 8080]
     end
-    
+
     subgraph "Data Layer"
         APP1 --> DB[(PostgreSQL 16<br/>Persistent Storage)]
         APP2 --> DB
-        APP1 --> S3[AWS S3<br/>File Storage]
-        APP2 --> S3
+        APP1 --> FS[Hybrid File Storage<br/>Local or S3]
+        APP2 --> FS
     end
-    
+
     subgraph "Security"
         SEC1[CSP Headers]
         SEC2[Rate Limiting]
         SEC3[TLS 1.3]
     end
+
+    %% assign classes
+    classDef mocha fill:#1e1e2e,stroke:#313244,color:#cdd6f4;
+    classDef blue fill:#1e1e2e,stroke:#89b4fa,color:#89b4fa;
+    classDef pink fill:#1e1e2e,stroke:#f5c2e7,color:#f5c2e7;
+    classDef green fill:#1e1e2e,stroke:#a6e3a1,color:#a6e3a1;
+    classDef yellow fill:#1e1e2e,stroke:#f9e2af,color:#f9e2af;
+
+    class LB,APP1,APP2 mocha;
+    class DB yellow;
+    class FS green;
+    class SEC1,SEC2,SEC3 pink;
 ```
 
 ### Container Orchestration
@@ -230,7 +226,7 @@ cp .env.example .env
 # Edit .env with your production values
 
 # 3. Deploy with automated script
-./deploy.sh
+./deployment.sh
 
 # 4. Monitor deployment
 make prod-status
@@ -317,7 +313,7 @@ docker-compose -f docker-compose.prod.yml exec db psql -U yoru_user -d yoru_past
 docker-compose -f docker-compose.prod.yml exec db pg_dump -U yoru_user yoru_pastebin > backup.sql
 
 # Update deployment
-./deploy.sh
+./deployment.sh
 
 # Scale application instances
 docker-compose -f docker-compose.prod.yml up -d --scale yoru=3
@@ -400,7 +396,7 @@ db/migrations/      # Database schema migrations
 - Update documentation for API changes
 - Test with both development and production Docker configurations
 
-### Testing
+### Testing [TODO]
 ```bash
 # Run all tests
 make test
@@ -416,4 +412,4 @@ Licensed under the GNU General Public License v3.0. See [LICENSE](LICENSE) for d
 
 ---
 
-**Built for developers who prioritize security and performance.**
+**Built for developers who prioritize security, performance and a whole lot of catppuccin ;) **
