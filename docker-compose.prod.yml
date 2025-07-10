@@ -19,10 +19,6 @@ services:
       - .env
     networks:
       - web
-    environment:
-      # remove these lines
-      # DATABASE_CONNECTION_STRING: ${DATABASE_CONNECTION_STRING}
-      # SERVER_PORT: ${SERVER_PORT}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.yoru.rule=Host(`paste.alokranjan.me`)"
