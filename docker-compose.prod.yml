@@ -17,6 +17,8 @@ services:
       replicas: 2
     env_file:
       - .env
+    volumes:
+      - ./data/uploads:/app/data/uploads:rw
     networks:
       - web
     labels:

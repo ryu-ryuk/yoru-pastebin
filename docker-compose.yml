@@ -12,6 +12,8 @@ services:
     environment:
       DATABASE_CONNECTION_STRING: ${DATABASE_CONNECTION_STRING}
       SERVER_PORT: ${SERVER_PORT}
+    volumes:
+      - ./data/uploads:/app/data/uploads:rw
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.yoru.rule=Host(`paste.alokranjan.me`)"
