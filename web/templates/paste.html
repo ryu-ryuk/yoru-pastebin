@@ -13,29 +13,32 @@
         <div class="paste-component">
             <header class="paste-header">
                 <a href="/" class="logo-link">Yoru</a>
-
                 <div class="paste-meta">
-                    {{if not .Paste.IsFile}}
+                    {{if .Paste.IsFile}}
+                    <span>File Paste</span>
+                    {{else}}
                     <span>{{.Paste.Language}}</span>
                     {{if .Paste.IsProtected}}<span>Protected</span>{{end}}
-                    {{else}}
-                    <span>File Paste</span>
                     {{end}}
                 </div>
-
                 <div class="header-actions">
+                    <button id="copyShareLinkButton" class="button button-primary prominent-copy">Copy Link</button>
                     {{if .Paste.IsFile}}
-                    <a href="/{{ .Paste.ID }}/" class="button button-primary">Download</a>
+                    <a href="/{{ .Paste.ID }}/download" class="button button-primary">Download</a>
                     {{else}}
-                    <button id="copyButton" class="button button-primary">Copy Raw</button>
+                    <button id="copyButton" class="button button-secondary">Copy Raw</button>
                     {{end}}
-
                     <a href="/" class="button new-paste-button">New Paste</a>
                 </div>
             </header>
-
-
             <main class="paste-body">
+                <div class="share-link-section prominent-share">
+                    <label for="shareLinkInput">Share Link:</label>
+                    <div class="share-link-container">
+                        <input type="text" id="shareLinkInput" value="https://paste.alokranjan.me/{{.Paste.ID}}/" readonly>
+                        <button id="copyShareLinkButton2" class="button button-secondary">Copy</button>
+                    </div>
+                </div>
                 {{if .Paste.IsFile}}
                 <div class="file-download-view">
                     <svg class="file-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2ZM18 20H6V4H13V9H18V20Z"></path></svg>
@@ -43,20 +46,6 @@
                     <span class="file-meta-details">{{.Paste.MimeType}} &bull; {{.Paste.FileSize | FormatFileSize}}</span>
                 </div>
                 {{else}}
-                <div class="share-link-section">
-                    <label for="shareLinkInput">Share Link:</label>
-                    <div class="share-link-container">
-                        <input type="text" id="shareLinkInput" value="https://paste.alokranjan.me/{{.Paste.ID}}/" readonly>
-                        <button id="copyShareLinkButton" class="button button-secondary">
-                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                                <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
-                                <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
-                            </svg>
-                            Copy
-                        </button>
-                    </div>
-                </div>
-                
                 <div class="text-view-wrapper">
                     <div class="paste-toolbar">
                         <div class="search-box">
@@ -79,7 +68,6 @@
                 </div>
                 {{end}}
             </main>
-
             <footer class="paste-footer">
                 <div class="expiration-info">
                     {{if .Paste.ExpiresAt}}
