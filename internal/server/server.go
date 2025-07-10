@@ -118,9 +118,13 @@ func (s *Server) setupRoutes() *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /", s.handleIndex())
 	mux.HandleFunc("POST /", s.handleCreatePaste())
-	mux.HandleFunc("GET /paste/{id}/", s.handleGetPaste())
-	mux.HandleFunc("POST /paste/{id}/", s.handleGetPaste())
-	mux.HandleFunc("GET /paste/{id}/download", s.handleFileDownload())
+	
+	// Handle both with and without trailing slash for paste URLs
+	mux.HandleFunc("GET /{id}", s.handleGetPasteRedirect())
+	mux.HandleFunc("GET /{id}/", s.handleGetPaste())
+	mux.HandleFunc("POST /{id}/", s.handleGetPaste())
+	mux.HandleFunc("GET /file/{id}/download", s.handleFileDownload())
+	
 	mux.HandleFunc("POST /api/v1/pastes", s.apiCreatePaste())
 	mux.HandleFunc("GET /api/v1/pastes/{id}", s.apiGetPaste())
 	mux.HandleFunc("GET /health", s.handleHealth())
@@ -360,6 +364,22 @@ func (s *Server) handleCreatePaste() http.HandlerFunc {
 	}
 }
 
+// redirects /{id} to /{id}/ for consistency
+func (s *Server) handleGetPasteRedirect() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := r.PathValue("id")
+		if id == "" {
+			s.renderTemplate(w, "error.html", PageData{
+				Message:     "missing paste id",
+				StatusCode:  http.StatusBadRequest,
+				CurrentYear: time.Now().Year(),
+			}, http.StatusBadRequest)
+			return
+		}
+		http.Redirect(w, r, fmt.Sprintf("/%s/", id), http.StatusMovedPermanently)
+	}
+}
+
 // retrieves and displays a paste.
 func (s *Server) handleGetPaste() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -396,20 +416,8 @@ func (s *Server) handleGetPaste() http.HandlerFunc {
 			return
 		}
 
-		if p.IsFile {
-			url, err := s.storage.GetDownloadURL(ctx, *p.S3Key)
-			if err != nil {
-				log.Printf("Failed to get download URL: %v", err)
-				s.renderTemplate(w, "error.html", PageData{
-					Message:     "file fetch failed",
-					StatusCode:  500,
-					CurrentYear: time.Now().Year(),
-				}, 500)
-				return
-			}
-			http.Redirect(w, r, url, http.StatusFound)
-			return
-		}
+		// For file pastes, show the paste.html page with file info and download button
+		// Don't automatically redirect to download - let user choose
 
 		if p.IsProtected() {
 			if r.Method == http.MethodGet {
