@@ -60,9 +60,9 @@ migrate_up:
 	@echo "Applying database migrations..."
 	# Ensure migrate CLI tool is available
 	$(GO_CMD) install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
-	# Run migrations
-	# Ensure the migration files are present and correctly named (TIMESTAMP__NAME.up.sql / .down.sql)
-	migrate -path $(MIGRATE_PATH) -database "$(DB_CONNECTION_STRING)" up
+	# Run migrations using full path
+	$(HOME)/go/bin/migrate -path $(MIGRATE_PATH) -database "$(DB_CONNECTION_STRING)" up
+	
 # Run the Go application
 run:
 	@echo "Running Yoru Pastebin..."
