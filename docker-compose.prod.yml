@@ -12,261 +12,333 @@ services:
 # | ▓▓                                 
 # | ▓▓                                 
 #  \▓▓                                 
-  yoru-pastebin:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        - BUILD_VERSION=${BUILD_VERSION:-latest}
-    restart: unless-stopped
+
+services:
+  yoru:
+    image: yoru-pastebin:latest
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
+    # restart: unless-stopped
+    deploy:
+      replicas: 2  # load balancing target
     env_file:
       - .env
     environment:
-      - DATABASE_CONNECTION_STRING=${DATABASE_CONNECTION_STRING}
-      - SERVER_PORT=${SERVER_PORT}
-      - AWS_REGION=${AWS_REGION}
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-      - AWS_S3_BUCKET=${AWS_S3_BUCKET}
-      - LOG_LEVEL=info
-      - TZ=Asia/Kolkata
-    volumes:
-      - ./data/uploads:/app/uploads:rw
-      - ./logs:/app/logs:rw
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsSL http://localhost:${SERVER_PORT}/health || exit 1"]
-      interval: 20s
-      timeout: 5s
-      retries: 5
-      start_period: 20s
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      DATABASE_CONNECTION_STRING: ${DATABASE_CONNECTION_STRING}
+      SERVER_PORT: ${SERVER_PORT}
     labels:
       - "traefik.enable=true"
-
-      # API route
-      #
-      - "traefik.http.routers.yoru-api.rule=Host(`paste.alokranjan.me`) && PathPrefix(`/api/`)"
-      - "traefik.http.routers.yoru-api.entrypoints=websecure"
-      - "traefik.http.routers.yoru-api.tls=true"
-      - "traefik.http.routers.yoru-api.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.yoru-api.service=yoru-pastebin"
-
-      # Web route
-      - "traefik.http.routers.yoru-web.rule=Host(`paste.alokranjan.me`)"
-      - "traefik.http.routers.yoru-web.entrypoints=websecure"
-      - "traefik.http.routers.yoru-web.tls=true"
-      - "traefik.http.routers.yoru-web.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.yoru-web.service=yoru-pastebin"
-
-      # Loadbalancer config
-      - "traefik.http.services.yoru-pastebin.loadbalancer.server.port=8080"
-
-      # Shared middlewares
-      - "traefik.http.routers.yoru-api.middlewares=security-headers,rate-limit"
-      - "traefik.http.routers.yoru-web.middlewares=security-headers,rate-limit"
-
-      # Rate limiting
-      - "traefik.http.middlewares.rate-limit.ratelimit.average=30"
-      - "traefik.http.middlewares.rate-limit.ratelimit.burst=50"
-
+      - "traefik.http.routers.yoru.rule=Host(`paste.alokranjan.me`)"
+      - "traefik.http.routers.yoru.entrypoints=websecure"
+      - "traefik.http.routers.yoru.tls=true"
+      - "traefik.http.routers.yoru.middlewares=security-headers@file"
+      - "traefik.http.routers.yoru.service=yoru-svc"
+      - "traefik.http.services.yoru-svc.loadbalancer.server.port=${SERVER_PORT}"
     networks:
       - web
-      - internal
-    security_opt:
-      - no-new-privileges:true
-    user: "1000:1000"
-    read_only: true
-    tmpfs:
-      - /tmp
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "5"
 
-
-  # ---------------------------------------------------------------------------
-  # PostgreSQL Database
-  # ---------------------------------------------------------------------------
   db:
     image: postgres:16-alpine
     restart: unless-stopped
     env_file:
       - .env
     environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
-      - db_data:/var/lib/postgresql/data:rw
-      - ./db/init:/docker-entrypoint-initdb.d:ro
-      - ./backups:/backups:rw
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
+      - db_data:/var/lib/postgresql/data
     networks:
-      - internal
-    security_opt:
-      - no-new-privileges:true
-    command: >
-      postgres
-      -c shared_preload_libraries=pg_stat_statements
-      -c log_statement=all
-      -c log_destination=stderr
-      -c logging_collector=on
-      -c max_connections=100
-      -c shared_buffers=256MB
-      -c effective_cache_size=1GB
+      - web
 
-  # ---------------------------------------------------------------------------
-  # Traefik Reverse Proxy
-  # ---------------------------------------------------------------------------
   traefik:
-    image: traefik:v3.0
+    image: traefik:v2.10
     restart: unless-stopped
     command:
-      # Docker provider
       - --providers.docker=true
-      - --providers.docker.exposedbydefault=false
-      - --providers.docker.network=web
-
-      # File provider for static config
       - --providers.file.directory=/etc/traefik/dynamic
       - --providers.file.watch=true
-
-      # Entry points
       - --entrypoints.web.address=:80
       - --entrypoints.websecure.address=:443
-
-      # HTTP to HTTPS redirect
       - --entrypoints.web.http.redirections.entrypoint.to=websecure
       - --entrypoints.web.http.redirections.entrypoint.scheme=https
-
-      # Let's Encrypt
-
-
-      # API and dashboard
       - --api.dashboard=false
       - --api.insecure=false
-
-      # Access logs
-      - --accesslog=true
-      - --accesslog.filepath=/var/log/traefik-access.log
-
-      # Traefik logs
-      - --log.level=INFO
-      - --log.filepath=/var/log/traefik.log
-
-      # Metrics
-      - --metrics.prometheus=true
-
     ports:
       - "80:80"
       - "443:443"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./traefik/letsencrypt:/letsencrypt:rw
-      - ./traefik/dynamic:/etc/traefik/dynamic:ro
-      - ./traefik/logs:/var/log:rw
       - ./traefik/certs:/certs:ro
-    labels:
-      # Dashboard configuration (password protected)
-      - "traefik.enable=true"
-      - "traefik.http.routers.traefik.entrypoints=websecure"
-      - "traefik.http.routers.traefik.tls=true"
-
+      - ./traefik/dynamic/config.yml:/etc/traefik/dynamic/config.yml
     networks:
       - web
-    security_opt:
-      - no-new-privileges:true
 
-  # ---------------------------------------------------------------------------
-  # Redis for Caching and Rate Limiting
-  # ---------------------------------------------------------------------------
-  redis:
-    image: redis:7-alpine
-    restart: unless-stopped
-    command: >
-      redis-server
-      --appendonly yes
-      --requirepass ${REDIS_PASSWORD:-change_me_in_production}
-      --maxmemory 256mb
-      --maxmemory-policy allkeys-lru
-    volumes:
-      - redis_data:/data:rw
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    networks:
-      - internal
-    security_opt:
-      - no-new-privileges:true
-
-  # ---------------------------------------------------------------------------
-  # Backup Service (runs scheduled backups to S3)
-  # ---------------------------------------------------------------------------
-  backup:
-    image: postgres:16-alpine
-    restart: "no"
-    profiles:
-      - backup  # Only runs when explicitly called
-    env_file:
-      - .env
-    environment:
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-      - AWS_DEFAULT_REGION=${AWS_REGION}
-    volumes:
-      - ./scripts:/scripts:ro
-      - ./backups:/backups:rw
-    entrypoint: ["/scripts/backup.sh"]
-    depends_on:
-      db:
-        condition: service_healthy
-    networks:
-      - internal
-
-  # # ---------------------------------------------------------------------------
-  # # Monitoring with Prometheus Node Exporter
-  # # ---------------------------------------------------------------------------
-  # node-exporter:
-  #   image: prom/node-exporter:latest
-  #   restart: unless-stopped
-  #   command:
-  #     - '--path.rootfs=/host'
-  #   volumes:
-  #     - '/:/host:ro,rslave'
-  #   networks:
-  #     - internal
-  #   security_opt:
-  #     - no-new-privileges:true
-  #   profiles:
-  #     - monitoring
-
-# =============================================================================
-# NETWORKS
-# =============================================================================
 networks:
   web:
-    external: true  # Create this network externally for shared use
-  internal:
-    driver: bridge
-    internal: true  # No internet access for internal services
+    external: true
+    driver: overlay
 
-# =============================================================================
-# VOLUMES
-# =============================================================================
 volumes:
   db_data:
-  redis_data:
+  
+
+#yoru-pastebin:
+#     build:
+#       context: .
+#       dockerfile: Dockerfile
+#       args:
+#         - BUILD_VERSION=${BUILD_VERSION:-latest}
+#     restart: unless-stopped
+#     env_file:
+#       - .env
+#     environment:
+#       - DATABASE_CONNECTION_STRING=${DATABASE_CONNECTION_STRING}
+#       - SERVER_PORT=${SERVER_PORT}
+#       - AWS_REGION=${AWS_REGION}
+#       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+#       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+#       - AWS_S3_BUCKET=${AWS_S3_BUCKET}
+#       - LOG_LEVEL=info
+#       - TZ=Asia/Kolkata
+#     volumes:
+#       - ./data/uploads:/app/uploads:rw
+#       - ./logs:/app/logs:rw
+#     healthcheck:
+#       test: ["CMD-SHELL", "curl -fsSL http://localhost:${SERVER_PORT}/health || exit 1"]
+#       interval: 20s
+#       timeout: 5s
+#       retries: 5
+#       start_period: 20s
+#     depends_on:
+#       db:
+#         condition: service_healthy
+#       redis:
+#         condition: service_healthy
+#     labels:
+#       - "traefik.enable=true"
+#
+#       # API route
+#       #
+#       - "traefik.http.routers.yoru-api.rule=Host(`paste.alokranjan.me`) && PathPrefix(`/api/`)"
+#       - "traefik.http.routers.yoru-api.entrypoints=websecure"
+#       - "traefik.http.routers.yoru-api.tls=true"
+#       - "traefik.http.routers.yoru-api.tls.certresolver=letsencrypt"
+#       - "traefik.http.routers.yoru-api.service=yoru-pastebin"
+#
+#       # Web route
+#       - "traefik.http.routers.yoru-web.rule=Host(`paste.alokranjan.me`)"
+#       - "traefik.http.routers.yoru-web.entrypoints=websecure"
+#       - "traefik.http.routers.yoru-web.tls=true"
+#       - "traefik.http.routers.yoru-web.tls.certresolver=letsencrypt"
+#       - "traefik.http.routers.yoru-web.service=yoru-pastebin"
+#
+#       # Loadbalancer config
+#       - "traefik.http.services.yoru-pastebin.loadbalancer.server.port=8080"
+#
+#       # Shared middlewares
+#       - "traefik.http.routers.yoru-api.middlewares=security-headers,rate-limit"
+#       - "traefik.http.routers.yoru-web.middlewares=security-headers,rate-limit"
+#
+#       # Rate limiting
+#       - "traefik.http.middlewares.rate-limit.ratelimit.average=30"
+#       - "traefik.http.middlewares.rate-limit.ratelimit.burst=50"
+#
+#     networks:
+#       - web
+#       - internal
+#     security_opt:
+#       - no-new-privileges:true
+#     user: "1000:1000"
+#     read_only: true
+#     tmpfs:
+#       - /tmp
+#     logging:
+#       driver: "json-file"
+#       options:
+#         max-size: "10m"
+#         max-file: "5"
+#
+#
+#   # ---------------------------------------------------------------------------
+#   # PostgreSQL Database
+#   # ---------------------------------------------------------------------------
+#   db:
+#     image: postgres:16-alpine
+#     restart: unless-stopped
+#     env_file:
+#       - .env
+#     environment:
+#       - POSTGRES_USER=${POSTGRES_USER}
+#       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+#       - POSTGRES_DB=${POSTGRES_DB}
+#       - POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256
+#     volumes:
+#       - db_data:/var/lib/postgresql/data:rw
+#       - ./db/init:/docker-entrypoint-initdb.d:ro
+#       - ./backups:/backups:rw
+#     healthcheck:
+#       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+#       interval: 30s
+#       timeout: 10s
+#       retries: 5
+#       start_period: 30s
+#     networks:
+#       - internal
+#     security_opt:
+#       - no-new-privileges:true
+#     command: >
+#       postgres
+#       -c shared_preload_libraries=pg_stat_statements
+#       -c log_statement=all
+#       -c log_destination=stderr
+#       -c logging_collector=on
+#       -c max_connections=100
+#       -c shared_buffers=256MB
+#       -c effective_cache_size=1GB
+#
+#   # ---------------------------------------------------------------------------
+#   # Traefik Reverse Proxy
+#   # ---------------------------------------------------------------------------
+#   traefik:
+#     image: traefik:v3.0
+#     restart: unless-stopped
+#     command:
+#       # Docker provider
+#       - --providers.docker=true
+#       - --providers.docker.exposedbydefault=false
+#       - --providers.docker.network=web
+#
+#       # File provider for static config
+#       - --providers.file.directory=/etc/traefik/dynamic
+#       - --providers.file.watch=true
+#
+#       # Entry points
+#       - --entrypoints.web.address=:80
+#       - --entrypoints.websecure.address=:443
+#
+#       # HTTP to HTTPS redirect
+#       - --entrypoints.web.http.redirections.entrypoint.to=websecure
+#       - --entrypoints.web.http.redirections.entrypoint.scheme=https
+#
+#       # Let's Encrypt
+#
+#
+#       # API and dashboard
+#       - --api.dashboard=false
+#       - --api.insecure=false
+#
+#       # Access logs
+#       - --accesslog=true
+#       - --accesslog.filepath=/var/log/traefik-access.log
+#
+#       # Traefik logs
+#       - --log.level=INFO
+#       - --log.filepath=/var/log/traefik.log
+#
+#       # Metrics
+#       - --metrics.prometheus=true
+#
+#     ports:
+#       - "80:80"
+#       - "443:443"
+#     volumes:
+#       - /var/run/docker.sock:/var/run/docker.sock:ro
+#       - ./traefik/letsencrypt:/letsencrypt:rw
+#       - ./traefik/dynamic:/etc/traefik/dynamic:ro
+#       - ./traefik/logs:/var/log:rw
+#       - ./traefik/certs:/certs:ro
+#     labels:
+#       # Dashboard configuration (password protected)
+#       - "traefik.enable=true"
+#       - "traefik.http.routers.traefik.entrypoints=websecure"
+#       - "traefik.http.routers.traefik.tls=true"
+#
+#     networks:
+#       - web
+#     security_opt:
+#       - no-new-privileges:true
+#
+#   # ---------------------------------------------------------------------------
+#   # Redis for Caching and Rate Limiting
+#   # ---------------------------------------------------------------------------
+#   redis:
+#     image: redis:7-alpine
+#     restart: unless-stopped
+#     command: >
+#       redis-server
+#       --appendonly yes
+#       --requirepass ${REDIS_PASSWORD:-change_me_in_production}
+#       --maxmemory 256mb
+#       --maxmemory-policy allkeys-lru
+#     volumes:
+#       - redis_data:/data:rw
+#     healthcheck:
+#       test: ["CMD", "redis-cli", "ping"]
+#       interval: 30s
+#       timeout: 10s
+#       retries: 3
+#     networks:
+#       - internal
+#     security_opt:
+#       - no-new-privileges:true
+#
+#   # ---------------------------------------------------------------------------
+#   # Backup Service (runs scheduled backups to S3)
+#   # ---------------------------------------------------------------------------
+#   backup:
+#     image: postgres:16-alpine
+#     restart: "no"
+#     profiles:
+#       - backup  # Only runs when explicitly called
+#     env_file:
+#       - .env
+#     environment:
+#       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+#       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+#       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+#       - AWS_DEFAULT_REGION=${AWS_REGION}
+#     volumes:
+#       - ./scripts:/scripts:ro
+#       - ./backups:/backups:rw
+#     entrypoint: ["/scripts/backup.sh"]
+#     depends_on:
+#       db:
+#         condition: service_healthy
+#     networks:
+#       - internal
+#
+#   # # ---------------------------------------------------------------------------
+#   # # Monitoring with Prometheus Node Exporter
+#   # # ---------------------------------------------------------------------------
+#   # node-exporter:
+#   #   image: prom/node-exporter:latest
+#   #   restart: unless-stopped
+#   #   command:
+#   #     - '--path.rootfs=/host'
+#   #   volumes:
+#   #     - '/:/host:ro,rslave'
+#   #   networks:
+#   #     - internal
+#   #   security_opt:
+#   #     - no-new-privileges:true
+#   #   profiles:
+#   #     - monitoring
+#
+# # =============================================================================
+# # NETWORKS
+# # =============================================================================
+# networks:
+#   web:
+#     external: true  # Create this network externally for shared use
+#   internal:
+#     driver: bridge
+#     internal: true  # No internet access for internal services
+#
+# # =============================================================================
+# # VOLUMES
+# # =============================================================================
+# volumes:
+#   db_data:
+#   redis_data:
