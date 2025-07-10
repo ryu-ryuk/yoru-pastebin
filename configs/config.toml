@@ -1,26 +1,32 @@
-# # Server Configuration
-# [server]
-# port = 8080
+# Server Configuration
+[server]
+port = 8080
+# base_url = "https://paste.alokranjan.me"
+# DB Configuration
+[database]
+# For local development: "postgres://postgres:pass@localhost:5432/yoru_pastebin?sslmode=disable"
+connection_string = "postgres://ryu:pass@localhost:5432/yoru_pastebin?sslmode=disable"
 
-# # DB Configuration
-# [database]
-# # PostgreSQL connection string
-# # Example: "postgres://user:password@host:port/dbname?sslmode=disable"
-# # For local development: "postgres://postgres:pass@localhost:5432/yoru_pastebin?sslmode=disable"
-# connection_string = "postgres://ryu:pass@localhost:5432/yoru_pastebin?sslmode=disable"
+# Paste Settings
+[paste]
+# Length of the generated unique ID (e.g., 8 means 8 characters)
+id_length = 8
+# Default expiration in minutes if not specified by user (0 for never)
+default_expiration_minutes = 1440 # 24 hours default for free tier
+# Maximum content size in bytes - 20MB for AWS free tier safety
+max_content_size_bytes = 20971520
 
-# # Paste Settings
-# [paste]
-# # Length of the generated unique ID (e.g., 8 means 8 characters)
-# id_length = 8
-# # Default expiration in minutes if not specified by user (0 for never)
-# default_expiration_minutes = 0 # Example: 60 for 1 hour
-# # Maximum content size in bytes (e.g., 1MB = 1048576)
-# max_content_size_bytes = 1048576
+# Security Settings
+[security]
+# Cost for bcrypt password hashing (higher is slower but more secure)
+bcrypt_cost = 12
+# Max requests per second for rate limiting - strict for free tier
+rate_limit_per_second = 2
 
-# # Security Settings
-# [security]
-# # Cost for bcrypt password hashing (higher is slower but more secure)
-# bcrypt_cost = 12
-# # Max requests per second for rate limiting (0 to disable)
-# rate_limit_per_second = 5
+# S3 Storage for File Uploads
+[s3]
+bucket = "your-s3-bucket-name"
+region = "your-aws-region"     # e.g., "us-east-1"
+# For local development, you can put credentials here.
+access_key_id = "YOUR_LOCAL_DEV_AWS_ACCESS_KEY_ID"
+secret_access_key = "YOUR_LOCAL_DEV_AWS_SECRET_ACCESS_KEY"
