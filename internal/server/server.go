@@ -113,6 +113,12 @@ func (s *Server) Shutdown(ctx context.Context) error {
 	log.Println("shutting down server...")
 	return s.httpServer.Shutdown(ctx)
 }
+func withStaticCache(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		next.ServeHTTP(w, r)
+	})
+}
 
 func (s *Server) setupRoutes() *http.ServeMux {
 	mux := http.NewServeMux()
@@ -124,7 +130,9 @@ func (s *Server) setupRoutes() *http.ServeMux {
 	mux.HandleFunc("GET /api/v1/pastes/{id}", s.apiGetPaste())
 
 	fs := http.FileServer(http.Dir(staticDir))
-	mux.Handle("GET /static/", http.StripPrefix("/static/", fs))
+	cachedFS := withStaticCache(http.StripPrefix("/static/", fs))
+	mux.Handle("GET /static/", cachedFS)
+
 	return mux
 }
 
@@ -140,7 +148,11 @@ func (s *Server) withSecurityHeaders(next http.Handler) http.Handler {
 		w.Header().Set("X-Frame-Options", "DENY")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("Referrer-Policy", "no-referrer")
-		w.Header().Set("Cache-Control", "no-store")
+
+		if !strings.HasPrefix(r.URL.Path, "/static/") {
+			// only disable caching on dynamic routes
+			w.Header().Set("Cache-Control", "no-store")
+		}
 
 		log.Printf("[%s] %s %s", getRealIP(r), r.Method, r.URL.Path)
 		next.ServeHTTP(w, r)
