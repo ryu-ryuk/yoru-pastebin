@@ -1,206 +1,594 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const codeBlock = document.querySelector('.paste-content pre code');
-    const lineNumbersDiv = document.querySelector('.line-numbers-container .line-numbers');
-    const lineCountSpan = document.getElementById('lineCount');
-    const searchInput = document.getElementById('searchInput');
-    const searchButton = document.getElementById('searchButton');
-    const prevMatchButton = document.getElementById('prevMatchButton');
-    const nextMatchButton = document.getElementById('nextMatchButton');
-    const searchResultCount = document.getElementById('searchResultCount');
-    const toggleWrapButton = document.getElementById('toggleWrap');
-    const copyButton = document.getElementById('copyButton');
-    const copyShareLinkButton = document.getElementById('copyShareLinkButton');
-    const shareLinkInput = document.getElementById('shareLinkInput');
-    const timeRemainingSpan = document.getElementById('time-remaining');
-    const pasteContentContainer = document.querySelector('.paste-content');
-
-    if (!codeBlock && window.location.pathname.length > 1 && window.location.pathname !== '/password_prompt.html') {
-        return;
-    }
-
-    const updateLineNumbers = () => {
-        const content = codeBlock.textContent;
-        const lines = content.split('\n');
-        lineNumbersDiv.innerHTML = '';
-        let numbersHtml = '';
-        for (let i = 1; i <= lines.length; i++) {
-            numbersHtml += `<span>${i}</span>\n`;
-        }
-        lineNumbersDiv.innerHTML = numbersHtml;
-        lineCountSpan.textContent = `Lines: ${lines.length}`;
-
-        codeBlock.addEventListener('scroll', () => {
-            lineNumbersDiv.scrollTop = codeBlock.scrollTop;
-        });
-        lineNumbersDiv.addEventListener('scroll', () => {
-            codeBlock.scrollTop = lineNumbersDiv.scrollTop;
-        });
-    };
-    if (codeBlock) updateLineNumbers();
-
-    if (typeof hljs !== 'undefined' && codeBlock) {
-        hljs.highlightElement(codeBlock);
-    }
-
-    let originalContent = codeBlock ? codeBlock.textContent : '';
-    let matches = [];
-    let currentMatchIndex = -1;
-
-    const performSearch = () => {
-        const searchTerm = searchInput.value;
-        if (!searchTerm) {
-            codeBlock.innerHTML = originalContent;
-            searchResultCount.textContent = '';
-            matches = [];
-            currentMatchIndex = -1;
-            if (prevMatchButton) prevMatchButton.disabled = true;
-            if (nextMatchButton) nextMatchButton.disabled = true;
-            if (typeof hljs !== 'undefined') hljs.highlightElement(codeBlock);
-            return;
-        }
-
-        const regex = new RegExp(searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-        let highlightedContent = originalContent.replace(regex, (match) => `<span class="highlight">${match}</span>`);
-
-        codeBlock.innerHTML = highlightedContent;
-        if (typeof hljs !== 'undefined') hljs.highlightElement(codeBlock);
-
-        matches = [...originalContent.matchAll(regex)];
-        searchResultCount.textContent = `${matches.length} results`;
-
-        if (matches.length > 0) {
-            currentMatchIndex = 0;
-            scrollToMatch(currentMatchIndex);
-            if (prevMatchButton) prevMatchButton.disabled = false;
-            if (nextMatchButton) nextMatchButton.disabled = false;
-        } else {
-            currentMatchIndex = -1;
-            searchResultCount.textContent = '0 results';
-            if (prevMatchButton) prevMatchButton.disabled = true;
-            if (nextMatchButton) nextMatchButton.disabled = true;
-        }
-    };
-
-    const scrollToMatch = (index) => {
-        if (matches.length === 0 || index === -1) return;
-
-        const allHighlights = codeBlock.querySelectorAll('.highlight');
-        if (allHighlights.length > 0) {
-            const currentActive = codeBlock.querySelector('.highlight.active');
-            if (currentActive) {
-                currentActive.classList.remove('active');
-            }
-
-            const targetHighlight = allHighlights[index];
-            targetHighlight.classList.add('active');
-            targetHighlight.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-            searchResultCount.textContent = `${index + 1}/${matches.length} results`;
-        }
-    };
-
-    const navigateSearch = (direction) => {
-        if (matches.length === 0) return;
-        let newIndex = currentMatchIndex + direction;
-        if (newIndex < 0) newIndex = matches.length - 1;
-        else if (newIndex >= matches.length) newIndex = 0;
-        currentMatchIndex = newIndex;
-        scrollToMatch(currentMatchIndex);
-    };
-
-    if (searchButton) searchButton.addEventListener('click', performSearch);
-    if (prevMatchButton) prevMatchButton.addEventListener('click', () => navigateSearch(-1));
-    if (nextMatchButton) nextMatchButton.addEventListener('click', () => navigateSearch(1));
-    if (searchInput) {
-        searchInput.addEventListener('keyup', (e) => {
-            if (e.key === 'Enter') performSearch();
-        });
-    }
-
-    const setButtonFeedback = (buttonElement, originalText, successText, errorText, isSuccess) => {
-        const textSpan = buttonElement.querySelector('.button-text-feedback');
-        if (!textSpan) return;
-
-        const originalIcon = buttonElement.querySelector('svg');
-        buttonElement.classList.add('feedback-active');
-        if (originalIcon) originalIcon.style.display = 'none';
-
-        textSpan.textContent = isSuccess ? successText : errorText;
-        textSpan.style.color = isSuccess ? 'var(--green)' : 'var(--red)';
-
-        setTimeout(() => {
-            textSpan.textContent = originalText;
-            textSpan.style.color = '';
-            if (originalIcon) originalIcon.style.display = '';
-            buttonElement.classList.remove('feedback-active');
-        }, 2000);
-    };
-
-    if (copyButton) {
-        copyButton.addEventListener('click', () => {
-            navigator.clipboard.writeText(originalContent)
-                .then(() => {
-                    setButtonFeedback(copyButton, 'Copy Raw', 'Copied!', 'Error!', true);
-                })
-                .catch(() => {
-                    setButtonFeedback(copyButton, 'Copy Raw', 'Copied!', 'Error!', false);
-                });
-        });
-    }
-
-    if (toggleWrapButton) {
-        toggleWrapButton.addEventListener('click', () => {
-            pasteContentContainer.classList.toggle('wrap-enabled');
-        });
-    }
-
-    if (timeRemainingSpan) {
-        const expiryTimeStr = timeRemainingSpan.dataset.expiry;
-        const expiryTime = new Date(expiryTimeStr);
-
-        const updateCountdown = () => {
-            const now = new Date();
-            const diff = expiryTime.getTime() - now.getTime();
-            if (diff <= 0) {
-                timeRemainingSpan.textContent = 'Expired';
-                clearInterval(countdownInterval);
-                return;
-            }
-
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-            let countdownText = [];
-            if (days > 0) countdownText.push(`${days}d`);
-            if (hours > 0) countdownText.push(`${hours}h`);
-            if (minutes > 0) countdownText.push(`${minutes}m`);
-            if (seconds > 0 || countdownText.length === 0) countdownText.push(`${seconds}s`);
-
-            timeRemainingSpan.textContent = countdownText.join(' ');
-        };
-
-        updateCountdown();
-        const countdownInterval = setInterval(updateCountdown, 1000);
-    }
-
-    if (copyShareLinkButton && shareLinkInput) {
-        copyShareLinkButton.addEventListener('click', () => {
-            shareLinkInput.select();
-            shareLinkInput.setSelectionRange(0, 99999);
-
-            navigator.clipboard.writeText(shareLinkInput.value)
-                .then(() => {
-                    setButtonFeedback(copyShareLinkButton, 'Copy Link', 'Copied!', 'Error!', true);
-                })
-                .catch(() => {
-                    setButtonFeedback(copyShareLinkButton, 'Copy Link', 'Copied!', 'Error!', false);
-                });
-        });
-    }
-
-    if (typeof hljs !== 'undefined' && codeBlock) {
-        hljs.highlightElement(codeBlock);
-    }
+	if (document.querySelector('.form-component')) {
+		initHomePage();
+	} else if (document.querySelector('.paste-component')) {
+		initPastePage();
+	}
 });
+
+function initHomePage() {
+	const textInput = document.getElementById('content-input');
+	const languageSelect = document.getElementById('language');
+	const charCounter = document.getElementById('char-counter');
+	const detectedLanguage = document.getElementById('detected-language');
+	const tabs = document.querySelectorAll('.tab-button');
+	const tabPanels = document.querySelectorAll('.tab-panel');
+	const form = document.querySelector('.form-component form');
+	const fileInput = document.getElementById('file-input');
+	const dropZone = document.querySelector('.drop-zone');
+
+	// Initialize state asynchronously
+	initializePageState();
+
+	async function initializePageState() {
+		const content = document.getElementById("content");
+		const draftKey = "paste_draft_content";
+		const languageKey = "selectedLanguage";
+		
+		// Initialize content and language state
+		if (content) {
+			const savedContent = localStorage.getItem(draftKey) || "";
+			const savedLanguage = localStorage.getItem(languageKey);
+			
+			// Restore saved content
+			content.value = savedContent;
+			
+			// Update character counter immediately for restored content
+			updateCharCounter();
+			
+			// Smart language selection logic
+			if (languageSelect) {
+				const navEntries = performance.getEntriesByType('navigation');
+				const isReload = navEntries.length && navEntries[0].type === 'reload';
+				
+				if (isReload) {
+					// Explicit reload - reset everything to clean state
+					languageSelect.value = 'auto';
+					localStorage.removeItem(languageKey);
+					updateDetectedLanguage('');
+				} else if (savedContent.trim() && savedLanguage) {
+					// Has saved content AND saved language - restore both
+					if (languageSelect.querySelector(`option[value="${savedLanguage}"]`)) {
+						languageSelect.value = savedLanguage;
+						if (savedLanguage !== 'auto') {
+							updateDetectedLanguage('');
+						}
+					}
+				} else if (savedContent.trim() && !savedLanguage) {
+					// Has saved content but NO saved language - auto-detect
+					languageSelect.value = 'auto';
+					const detected = await detectLanguage(savedContent);
+					if (detected) {
+						updateDetectedLanguage(detected);
+					}
+				} else {
+					// No saved content - default to auto
+					languageSelect.value = 'auto';
+					updateDetectedLanguage('');
+				}
+			}
+			
+			// Save content changes
+			content.addEventListener("input", () => {
+				localStorage.setItem(draftKey, content.value);
+			});
+			
+			// Focus the content area
+			content.focus();
+		}
+	}
+
+	// Character counter
+	function updateCharCounter() {
+		const content = document.getElementById('content-input') || document.getElementById('content');
+		if (content && charCounter) {
+			const count = content.value.length;
+			charCounter.textContent = `${count.toLocaleString()} characters`;
+			
+			// Show warning for very large pastes
+			if (count > 100000) {
+				charCounter.style.color = 'var(--yellow)';
+			} else if (count > 500000) {
+				charCounter.style.color = 'var(--red)';
+			} else {
+				charCounter.style.color = 'var(--text-secondary)';
+			}
+		}
+	}
+
+	// Update detected language display
+	function updateDetectedLanguage(lang) {
+		if (detectedLanguage) {
+			if (lang && lang !== 'auto' && lang !== 'plaintext') {
+				detectedLanguage.textContent = `Detected: ${lang}`;
+			} else {
+				detectedLanguage.textContent = '';
+			}
+		}
+	}
+
+	async function loadLang(lang) {
+		// Skip if already loaded
+		if (hljs.getLanguage(lang)) {
+			return;
+		}
+
+		try {
+			// Dynamically import the language file
+			const script = document.createElement('script');
+			script.src = `/static/hj/languages/${lang}.min.js`;
+			script.async = true;
+			
+			// Return a promise that resolves when the script loads
+			return new Promise((resolve, reject) => {
+				script.onload = () => resolve();
+				script.onerror = () => {
+					console.warn(`Failed to load language: ${lang}`);
+					reject(new Error(`Failed to load ${lang}`));
+				};
+				document.head.appendChild(script);
+			});
+		} catch (error) {
+			console.warn(`Language ${lang} not available:`, error);
+		}
+	}
+
+	if (languageSelect) {
+		const navEntries = performance.getEntriesByType('navigation');
+		const isReload = navEntries.length && navEntries[0].type === 'reload';
+
+		if (isReload) {
+			languageSelect.value = 'auto';
+			localStorage.removeItem('selectedLanguage');
+		} else {
+			const savedLang = localStorage.getItem('selectedLanguage');
+			if (savedLang && languageSelect.querySelector(`option[value="${savedLang}"]`)) {
+				languageSelect.value = savedLang;
+			}
+		}
+
+		languageSelect.addEventListener('change', () => {
+			const val = languageSelect.value;
+			if (val === 'auto') {
+				localStorage.removeItem('selectedLanguage');
+			} else {
+				localStorage.setItem('selectedLanguage', val);
+			}
+		});
+	}
+
+	// Lightweight language detection without loading all languages
+	async function detectLanguage(text) {
+		// Common language patterns for quick detection without full language files
+		const patterns = {
+			'javascript': [/\b(function|const|let|var|class|export|import)\b/, /=>/, /\bthis\./],
+			'typescript': [/\b(interface|type|extends|implements)\b/, /:.*\[|\]/, /\bas\s+\w+/],
+			'python': [/\b(def|class|import|from|if __name__)\b/, /:\s*$/, /\bself\./],
+			'java': [/\b(public|private|class|static|void)\b/, /\w+\s*\(.*\)\s*{/, /System\.out\.print/],
+			'cpp': [/\b(#include|using namespace|std::)\b/, /\w+::\w+/, /cout\s*<</],
+			'c': [/\b(#include|int main|printf|malloc)\b/, /\w+\s*\*\w+/, /scanf/],
+			'go': [/\b(package|import|func|var|type)\b/, /:=/, /fmt\.Print/],
+			'rust': [/\b(fn|let|mut|use|struct|impl)\b/, /\w+!/, /println!/],
+			'php': [/<\?php/, /\$\w+/, /echo\s+/],
+			'ruby': [/\b(def|class|module|end|puts)\b/, /@\w+/, /\w+\.each/],
+			'bash': [/\b(if.*then|for.*do|while.*do)\b/, /^\s*#!/, /\$\w+/, /echo\s+/],
+			'sql': [/\b(SELECT|FROM|WHERE|INSERT|UPDATE|DELETE)\b/i, /\bJOIN\b/i],
+			'css': [/\w+\s*{/, /:\s*[\w#%]+;/, /@media/],
+			'html': [/<\w+/, /<\/\w+>/, /<!DOCTYPE/],
+			'json': [/^\s*{/, /"\w+":\s*/, /^\s*\[/],
+			'xml': [/<\?xml/, /<\w+.*>/, /<\/\w+>/],
+			'yaml': [/^\w+:/, /^\s*-\s+/, /---/],
+			'dockerfile': [/\b(FROM|RUN|COPY|CMD)\b/, /\bEXPOSE\s+\d+/],
+			'makefile': [/^\w+:/, /\t@?/, /\$\(.*\)/]
+		};
+
+		// Score each language based on pattern matches
+		const scores = {};
+		for (const [lang, langPatterns] of Object.entries(patterns)) {
+			scores[lang] = 0;
+			for (const pattern of langPatterns) {
+				if (pattern.test(text)) {
+					scores[lang]++;
+				}
+			}
+		}
+
+		// Find the language with the highest score
+		const detected = Object.entries(scores)
+			.filter(([_, score]) => score > 0)
+			.sort(([,a], [,b]) => b - a)[0];
+
+		return detected ? detected[0] : null;
+	}
+
+	// auto-detect language on paste and real-time detection
+	if (textInput && languageSelect && typeof hljs !== 'undefined') {
+		// Initialize character counter
+		updateCharCounter();
+		textInput.addEventListener('input', updateCharCounter);
+
+		// Language detection on paste
+		textInput.addEventListener('paste', async (e) => {
+			if (languageSelect.value !== 'auto') return;
+			const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+			
+			// Use lightweight detection first
+			const detected = await detectLanguage(pastedText);
+			if (detected && languageSelect.querySelector(`option[value="${detected}"]`)) {
+				languageSelect.value = detected;
+				localStorage.setItem('selectedLanguage', detected);
+				updateDetectedLanguage(detected);
+			}
+			
+			// Update character counter after paste
+			setTimeout(updateCharCounter, 10);
+		});
+
+		// Real-time language detection for auto mode
+		let detectTimeout;
+		textInput.addEventListener('input', () => {
+			clearTimeout(detectTimeout);
+			detectTimeout = setTimeout(async () => {
+				if (languageSelect.value === 'auto' && textInput.value.trim()) {
+					const detected = await detectLanguage(textInput.value);
+					if (detected) {
+						updateDetectedLanguage(detected);
+					} else {
+						updateDetectedLanguage('');
+					}
+				}
+			}, 500);
+		});
+
+		// Clear detected language when manually selecting
+		languageSelect.addEventListener('change', () => {
+			if (languageSelect.value !== 'auto') {
+				updateDetectedLanguage('');
+			}
+		});
+	}
+
+	// Form submission with better UX
+	if (form) {
+		const submitButton = form.querySelector('button[type="submit"]');
+		
+		form.addEventListener('submit', (e) => {
+			if (submitButton) {
+				submitButton.classList.add('loading');
+				submitButton.disabled = true;
+				submitButton.textContent = 'Creating...';
+			}
+			
+			// Basic validation feedback
+			const textContent = textInput ? textInput.value.trim() : '';
+			const fileSelected = fileInput && fileInput.files && fileInput.files.length > 0;
+			
+			if (!textContent && !fileSelected) {
+				e.preventDefault();
+				if (submitButton) {
+					submitButton.classList.remove('loading');
+					submitButton.disabled = false;
+					submitButton.textContent = 'Create Paste';
+				}
+				
+				// Show error feedback
+				const activePanel = document.querySelector('.tab-panel.active');
+				if (activePanel && activePanel.id === 'text-panel' && textInput) {
+					textInput.focus();
+					textInput.closest('.tab-panel').style.borderColor = 'var(--red)';
+					setTimeout(() => {
+						textInput.closest('.tab-panel').style.borderColor = '';
+					}, 3000);
+				}
+			}
+		});
+	}
+
+	// tab logic
+	tabs.forEach(tab => {
+		tab.addEventListener('click', () => {
+			tabs.forEach(t => t.classList.remove('active'));
+			tab.classList.add('active');
+			tabPanels.forEach(panel => panel.classList.toggle('active', panel.id === `${tab.dataset.tab}-panel`));
+		});
+	});
+
+	// drag-and-drop file preview
+	if (dropZone && fileInput) {
+		const dropZonePrompt = document.querySelector('.drop-zone-prompt');
+		const dropZonePreview = document.querySelector('.drop-zone-preview');
+
+		const updateDropZone = (file) => {
+			dropZonePrompt.style.display = 'none';
+			dropZonePreview.style.display = 'block';
+			dropZonePreview.innerHTML = `<strong>${file.name}</strong><small>${(file.size / 1024 / 1024).toFixed(2)} MB</small>`;
+		};
+
+		fileInput.addEventListener('change', () => {
+			if (fileInput.files.length > 0) updateDropZone(fileInput.files[0]);
+		});
+
+		dropZone.addEventListener('dragover', e => {
+			e.preventDefault();
+			dropZone.classList.add('drag-over');
+		});
+		['dragleave', 'dragend'].forEach(type => {
+			dropZone.addEventListener(type, () => dropZone.classList.remove('drag-over'));
+		});
+		dropZone.addEventListener('drop', e => {
+			e.preventDefault();
+			dropZone.classList.remove('drag-over');
+			if (e.dataTransfer.files.length > 0) {
+				fileInput.files = e.dataTransfer.files;
+				updateDropZone(fileInput.files[0]);
+			}
+		});
+	}
+
+	form.addEventListener('submit', async () => {
+		const activeTab = document.querySelector('.tab-button.active').dataset.tab;
+
+		if (activeTab === 'text') {
+			fileInput.value = '';
+
+			if (languageSelect.value === 'auto' && textInput.value.trim() !== '') {
+				// Use lightweight detection for form submission
+				const detected = await detectLanguage(textInput.value);
+				if (detected && languageSelect.querySelector(`option[value="${detected}"]`)) {
+					languageSelect.value = detected;
+					localStorage.setItem('selectedLanguage', detected);
+				} else {
+					languageSelect.value = 'plaintext';
+				}
+			}
+		} else {
+			textInput.value = '';
+		}
+	});
+
+	const content = document.getElementById("content");
+	const password = document.getElementById("password");
+	if (content) content.focus();
+
+	content?.addEventListener("keydown", (e) => {
+		if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+			form?.submit();
+		}
+	});
+
+	// Additional keyboard shortcuts and form handling
+	if (content) {
+		content.addEventListener("keydown", (e) => {
+			if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+				form?.submit();
+			}
+		});
+	}
+
+	form?.addEventListener("submit", () => {
+		localStorage.removeItem("paste_draft_content");
+	});
+
+	const toggle = document.getElementById("toggle-password");
+	const passwordField = document.getElementById("password");
+	if (passwordField && toggle) {
+		toggle.addEventListener("click", () => {
+			const type = passwordField.type === "password" ? "text" : "password";
+			passwordField.type = type;
+			toggle.textContent = type === "text" ? "hide" : "show";
+		});
+	}
+}
+
+
+
+async function initPastePage() {
+	const copyToClipboard = (button, textToCopy, originalText) => {
+		navigator.clipboard.writeText(textToCopy)
+			.then(() => { button.textContent = 'Copied!'; })
+			.catch(err => { button.textContent = 'Error!'; console.error('Clipboard error:', err); })
+			.finally(() => { setTimeout(() => { button.textContent = originalText; }, 2000); });
+	};
+	const searchInput = document.getElementById('searchInput');
+	const searchButton = document.getElementById('searchButton');
+
+	// make enter key not reload page
+	if (searchInput) {
+		searchInput.addEventListener('keydown', (e) => {
+			if (e.key === 'Enter') {
+				e.preventDefault();
+				e.stopPropagation();
+				searchButton?.click();
+			}
+		});
+	}
+
+	const copyShareLinkButton = document.getElementById('copyShareLinkButton');
+	const shareLinkInput = document.getElementById('shareLinkInput');
+	const timeRemainingSpan = document.getElementById('time-remaining');
+
+	if (copyShareLinkButton && shareLinkInput) {
+		copyShareLinkButton.addEventListener('click', () => {
+			shareLinkInput.select();
+			shareLinkInput.setSelectionRange(0, 99999); // For mobile
+			copyToClipboard(copyShareLinkButton, shareLinkInput.value, 'Copy');
+		});
+		
+		// Auto-select link when clicked for easy copying
+		shareLinkInput.addEventListener('click', () => {
+			shareLinkInput.select();
+		});
+	}
+
+	if (timeRemainingSpan && timeRemainingSpan.dataset.expiry) {
+		const expiryTime = new Date(timeRemainingSpan.dataset.expiry);
+		const countdownInterval = setInterval(() => {
+			const diff = expiryTime.getTime() - new Date().getTime();
+			if (diff <= 0) {
+				timeRemainingSpan.textContent = 'Expired';
+				clearInterval(countdownInterval);
+				return;
+			}
+			const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+			const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+			const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+			const s = Math.floor((diff % (1000 * 60)) / 1000);
+			timeRemainingSpan.textContent = [d > 0 ? `${d}d` : '', h > 0 ? `${h}h` : '', m > 0 ? `${m}m` : '', (d > 0 || h > 0 || m > 0) ? '' : `${s}s`].filter(Boolean).join(' ') || `${s}s`;
+		}, 1000);
+	}
+
+	const codeBlock = document.querySelector('.code-view-container pre code');
+	if (codeBlock) {
+		// Get original content from the code block
+		const originalContent = codeBlock.textContent || '';
+		
+		const lineNumbersDiv = document.querySelector('.line-numbers');
+		const lineCountSpan = document.getElementById('lineCount');
+		const codeViewContainer = document.querySelector('.code-view-container');
+
+		const lines = originalContent.split('\n');
+		lineCountSpan.textContent = lines.length;
+		lineNumbersDiv.innerHTML = Array.from({ length: lines.length }, (_, i) => `<span>${i + 1}</span>`).join('');
+
+		const copyRawButton = document.getElementById('copyButton');
+		const toggleWrapButton = document.getElementById('toggleWrap');
+		copyRawButton.addEventListener('click', () => copyToClipboard(copyRawButton, originalContent, 'Copy Raw'));
+		toggleWrapButton.addEventListener('click', () => codeViewContainer.classList.toggle('wrap-enabled'));
+
+		const searchInput = document.getElementById('searchInput');
+		const prevMatchButton = document.getElementById('prevMatchButton');
+		const nextMatchButton = document.getElementById('nextMatchButton');
+		const searchResultCount = document.getElementById('searchResultCount');
+		let matches = [];
+		let currentMatchIndex = -1;
+
+		function escapeHTML(str) {
+			return str
+				.replace(/&/g, "&amp;")
+				.replace(/</g, "&lt;")
+				.replace(/>/g, "&gt;")
+				.replace(/"/g, "&quot;")
+				.replace(/'/g, "&#039;");
+		}
+
+		const originalHTML = codeBlock.innerHTML; // cache only once
+
+		const performSearch = () => {
+			const searchTerm = searchInput.value.trim();
+			if (!searchTerm) {
+				codeBlock.innerHTML = originalHTML;
+				hljs.highlightElement(codeBlock);
+				searchResultCount.textContent = '';
+				matches = [];
+				currentMatchIndex = -1;
+				return;
+			}
+			// TODO: render syntax highlighting ??
+			codeBlock.innerHTML = originalHTML; // reset before applying highlights
+
+			const safeTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+			const regex = new RegExp(safeTerm, 'gi');
+			let matchIdx = 0;
+
+			const highlighted = codeBlock.innerHTML.replace(regex, match =>
+				`<mark data-idx="${matchIdx++}">${match}</mark>`
+			);
+
+			codeBlock.innerHTML = highlighted;
+			matches = Array.from(codeBlock.querySelectorAll('mark'));
+
+			if (matches.length) {
+				currentMatchIndex = 0;
+				updateActiveMatch();
+				searchResultCount.textContent = `1/${matches.length} results`;
+			} else {
+				currentMatchIndex = -1;
+				searchResultCount.textContent = '0 results';
+			}
+		};
+
+
+
+		const updateActiveMatch = () => {
+			matches.forEach(m => m.classList.remove('active'));
+			if (currentMatchIndex >= 0 && matches[currentMatchIndex]) {
+				const match = matches[currentMatchIndex];
+				match.classList.add('active');
+				match.scrollIntoView({ block: 'center', behavior: 'smooth' });
+				searchResultCount.textContent = `${currentMatchIndex + 1}/${matches.length} results`;
+			}
+		};
+
+
+		const navigateSearch = (direction) => {
+			if (!matches.length) return;
+			currentMatchIndex = (currentMatchIndex + direction + matches.length) % matches.length;
+			updateActiveMatch();
+		};
+
+		const searchForm = searchInput.closest('form');
+		if (searchForm) {
+			searchForm.addEventListener('submit', (e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				return false;
+			});
+		}
+		searchInput.addEventListener('keydown', (e) => {
+			if (e.key === 'Enter') {
+				e.preventDefault();
+				e.stopPropagation();
+				performSearch();
+				return false;
+			}
+			if (e.key === 'ArrowUp') {
+				e.preventDefault();
+				navigateSearch(-1);
+			}
+			if (e.key === 'ArrowDown') {
+				e.preventDefault();
+				navigateSearch(1);
+			}
+		});
+		prevMatchButton.addEventListener('click', () => navigateSearch(-1));
+		nextMatchButton.addEventListener('click', () => navigateSearch(1));
+		if (searchButton) searchButton.addEventListener('click', performSearch);
+		if (prevMatchButton) prevMatchButton.addEventListener('click', () => navigateSearch(-1));
+		if (nextMatchButton) nextMatchButton.addEventListener('click', () => navigateSearch(1));
+		if (searchInput) {
+			searchInput.addEventListener('keyup', (e) => {
+				if (e.key === 'Enter') performSearch();
+			});
+		}
+	}
+}
+
+const toggle = document.getElementById('cursor-toggle');
+const sakuraContainer = document.getElementById('sakura-container');
+let sakuraEnabled = true;
+
+function createSakuraPetals(count = 15) {
+    for (let i = 0; i < count; i++) {
+        const petal = document.createElement('img');
+        petal.src = '/static/sakura.png';
+        petal.className = 'sakura-petal';
+        petal.style.left = Math.random() * 100 + 'vw';
+        petal.style.top = Math.random() * -100 + 'px';
+        petal.style.animationDelay = (Math.random() * 10) + 's';
+        sakuraContainer.appendChild(petal);
+    }
+}
+
+if (sakuraEnabled) {
+	sakuraContainer.style.display = 'block';
+	createSakuraPetals();
+	toggle.classList.add('active');
+}
+
+toggle.onclick = () => {
+	sakuraEnabled = !sakuraEnabled;
+	sakuraContainer.style.display = sakuraEnabled ? 'block' : 'none';
+	toggle.classList.toggle('active', sakuraEnabled);
+
+	if (sakuraEnabled) createSakuraPetals();
+};
