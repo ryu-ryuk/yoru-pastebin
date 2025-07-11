@@ -68,8 +68,6 @@ run:
 	@echo "Running Yoru Pastebin (local development)..."
 	@echo "Using local database configuration..."
 	DATABASE_CONNECTION_STRING="$(DB_CONNECTION_STRING)" \
-	SERVER_PORT=8000 \
-	BASE_URL="http://localhost:8081" \
 	$(GO_CMD) run $(MAIN_APP)
 
 # Run the Go application using production environment variables
