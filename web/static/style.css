@@ -221,23 +221,22 @@ textarea {
     z-index: 10;
 
     /* catppuccin glassy look */
-    background-color: rgba(30, 30, 46, 0.8); /* slightly more opaque for mobile */
+    background-color: rgba(30, 30, 46, 0.8);
     backdrop-filter: blur(12px) saturate(150%);
     -webkit-backdrop-filter: blur(12px) saturate(150%);
     
-    border-top: 1px solid rgba(49, 50, 68, 0.6); /* subtle border */
+    border-top: 1px solid rgba(49, 50, 68, 0.6);
     color: #cdd6f4;
     text-shadow: 0 0 4px #89b4fa;
     font-size: 0.8rem;
 }
 
-/* Add bottom padding to prevent footer overlap and better spacing */
 .page-container {
     display: flex;
     flex-direction: column;
     align-items: center;
     min-height: 96vh;
-    padding: 2rem 1.5rem 5rem; /* increased bottom padding from 4rem */
+    padding: 2rem 1.5rem 5rem; 
     min-height: 100vh;
     box-sizing: border-box;
     max-width: 1080px;
@@ -245,49 +244,32 @@ textarea {
     z-index: 1;
 }
 
-/* Mobile optimizations - more compact footer */
 @media (max-width: 768px) {
     .site-footer {
-        padding: 0.4rem 0.75rem; /* reduced from 0.5rem */
-        font-size: 0.7rem; /* smaller text */
-        line-height: 1.3; /* tighter line height */
+        padding: 0.25rem 0.5rem;
+        font-size: 0.65rem;
+        line-height: 1.1;
+        min-height: 32px;
     }
-    
-    .site-footer .footer-content {
-        display: flex;
-        flex-direction: column;
-        gap: 0.15rem; /* reduced gap */
-        align-items: center;
-    }
-    
-    .site-footer .github-link {
-        order: -1; /* move to top on mobile */
-        font-size: 0.65rem; /* even smaller for github link */
-    }
-    
     .page-container {
-        padding: 1.5rem 1rem 4.5rem; /* adjusted for mobile */
+        padding: 2.5rem 1rem 6rem; 
+    }
+    .new-paste-button {
+        margin-bottom: 2.5rem;
     }
 }
 
-/* Very small screens - ultra compact footer */
 @media (max-width: 480px) {
     .site-footer {
-        padding: 0.3rem 0.5rem; /* very compact */
-        font-size: 0.65rem;
-        line-height: 1.2;
-    }
-    
-    .site-footer .footer-content {
-        gap: 0.1rem; /* minimal gap */
-    }
-    
-    .site-footer .github-link {
+        padding: 0.15rem 0.25rem;
         font-size: 0.6rem;
+        min-height: 24px;
     }
-    
     .page-container {
-        padding: 1rem 0.75rem 4rem; /* tight mobile spacing */
+        padding: 3rem 0.5rem 7rem;
+    }
+    .new-paste-button {
+        margin-bottom: 3rem;
     }
 }
 
@@ -482,7 +464,7 @@ textarea {
 }
 #cursor-toggle {
 	position: fixed;
-	bottom: 3.6rem; /* move it above the footer */
+	bottom: 3.6rem;
 	right: 1.25rem;
 	width: 42px;
 	height: 42px;
@@ -520,8 +502,6 @@ textarea {
 
 
 
-/* .form-header { text-align: center; padding: 2rem 2rem 1.5rem; } */
-/* .form-header p { font-size: 1.1rem; color: var(--text-secondary); } */
 .form-body { padding: 0 2rem 2rem; }
 .tabs { display: flex; border-bottom: 1px solid var(--border-color); margin-bottom: 1.5rem; }
 .tab-button {
