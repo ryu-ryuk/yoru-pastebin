@@ -68,15 +68,19 @@ body {
 	z-index: 10;
 	display: flex;
 	justify-content: center;
+    min-height: 36px;
+
 }
+
 
 .footer-content {
 	display: flex;
-	gap: 2rem;
-	align-items: center;
 	flex-wrap: wrap;
+	align-items: center;
 	justify-content: center;
+	gap: 1rem;
 	text-align: center;
+	line-height: 1;
 }
 
 .site-footer strong {
@@ -271,8 +275,17 @@ textarea {
     .new-paste-button {
         margin-bottom: 3rem;
     }
+    .footer-content {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: space-around;
+    }
 }
-
+.separator {
+	color: var(--text-secondary);
+	opacity: 0.5;
+	font-weight: 400;
+}
 .form-header {
     text-align: center;
     padding: 2rem 2rem 1.5rem;
