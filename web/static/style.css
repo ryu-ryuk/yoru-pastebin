@@ -55,22 +55,7 @@ body {
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
     transition: all 0.25s ease;
 }
-.site-footer {
-	position: fixed;
-	bottom: 0;
-	width: 100%;
-	padding: 0.4rem 1rem;
-	font-size: 0.8rem;
-	color: var(--text-secondary);
-	background-color: rgba(30, 30, 46, 0.5);
-	backdrop-filter: blur(10px);
-	border-top: 1px solid rgba(49, 50, 68, 0.4);
-	z-index: 10;
-	display: flex;
-	justify-content: center;
-    min-height: 36px;
-
-}
+/* Footer styles moved to single consolidated rule below */
 
 
 .footer-content {
@@ -212,27 +197,24 @@ textarea {
     background-color: #f38ba8;
 }
 
-.site-footer {
-    transition: all 0.3s ease;
-}
-
+/* Consolidated footer styles */
 .site-footer {
     position: fixed;
     bottom: 0;
     width: 100%;
-    padding: 0.75rem 1rem;
-    text-align: center;
-    z-index: 10;
-
-    /* catppuccin glassy look */
-    background-color: rgba(30, 30, 46, 0.8);
+    padding: 0.4rem 1rem;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    background-color: rgba(30, 30, 46, 0.7);
     backdrop-filter: blur(12px) saturate(150%);
     -webkit-backdrop-filter: blur(12px) saturate(150%);
-    
-    border-top: 1px solid rgba(49, 50, 68, 0.6);
-    color: #cdd6f4;
-    text-shadow: 0 0 4px #89b4fa;
-    font-size: 0.8rem;
+    border-top: 1px solid rgba(49, 50, 68, 0.4);
+    z-index: 10;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 36px;
+    transition: all 0.3s ease;
 }
 
 .page-container {
@@ -276,9 +258,12 @@ textarea {
         margin-bottom: 3rem;
     }
     .footer-content {
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        justify-content: space-around;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        gap: 1rem;
+        justify-content: space-between;
+        align-items: center;
     }
 }
 .separator {
