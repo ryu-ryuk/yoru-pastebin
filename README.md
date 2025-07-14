@@ -162,8 +162,8 @@ graph TB
     end
 
     subgraph "Application Layer"
-        LB --> APP1[Yoru 1<br/>Port 8080]
-        LB --> APP2[Yoru 2<br/>Port 8080]
+        LB --> APP1[Yoru 1<br/>]
+        LB --> APP2[Yoru 2<br/>]
     end
 
     subgraph "Data Layer"
