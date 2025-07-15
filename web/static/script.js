@@ -363,9 +363,10 @@ function initHomePage() {
 
 		if (activeTab === 'text') {
 			fileInput.value = '';
+			const filePasswordField = document.getElementById('file-password');
+			if (filePasswordField) filePasswordField.value = '';
 
 			if (languageSelect.value === 'auto' && textInput.value.trim() !== '') {
-				// Use lightweight detection for form submission
 				const detected = await detectLanguage(textInput.value);
 				if (detected && languageSelect.querySelector(`option[value="${detected}"]`)) {
 					languageSelect.value = detected;
@@ -376,6 +377,8 @@ function initHomePage() {
 			}
 		} else {
 			textInput.value = '';
+			const textPasswordField = document.getElementById('password');
+			if (textPasswordField) textPasswordField.value = '';
 		}
 	});
 
@@ -389,7 +392,6 @@ function initHomePage() {
 		}
 	});
 
-	// Additional keyboard shortcuts and form handling
 	if (content) {
 		content.addEventListener("keydown", (e) => {
 			if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
@@ -409,6 +411,16 @@ function initHomePage() {
 			const type = passwordField.type === "password" ? "text" : "password";
 			passwordField.type = type;
 			toggle.textContent = type === "text" ? "hide" : "show";
+		});
+	}
+
+	const fileToggle = document.getElementById("toggle-file-password");
+	const filePasswordField = document.getElementById("file-password");
+	if (filePasswordField && fileToggle) {
+		fileToggle.addEventListener("click", () => {
+			const type = filePasswordField.type === "password" ? "text" : "password";
+			filePasswordField.type = type;
+			fileToggle.textContent = type === "text" ? "hide" : "show";
 		});
 	}
 
@@ -497,23 +509,13 @@ async function initPastePage() {
 		});
 	}
 
-	const copyShareLinkButton = document.getElementById('copyShareLinkButton');
 	const copyShareLinkButtonSecondary = document.getElementById('copyShareLinkButtonSecondary');
 	const shareLinkInput = document.getElementById('shareLinkInput');
 	const timeRemainingSpan = document.getElementById('time-remaining');
 
-	// Handle main copy button in header
-	if (copyShareLinkButton && shareLinkInput) {
-		copyShareLinkButton.addEventListener('click', () => {
-			copyToClipboard(copyShareLinkButton, shareLinkInput.value, 'Copy Link');
-		});
-	}
-
-	// Handle secondary copy button next to input
+	// Handle copy button next to input
 	if (copyShareLinkButtonSecondary && shareLinkInput) {
 		copyShareLinkButtonSecondary.addEventListener('click', () => {
-			shareLinkInput.select();
-			shareLinkInput.setSelectionRange(0, 99999); // For mobile
 			copyToClipboard(copyShareLinkButtonSecondary, shareLinkInput.value, 'Copy');
 		});
 
@@ -555,8 +557,18 @@ async function initPastePage() {
 
 		const copyRawButton = document.getElementById('copyButton');
 		const toggleWrapButton = document.getElementById('toggleWrap');
+		const lineInfoDiv = document.querySelector('.line-info');
+		
 		copyRawButton.addEventListener('click', () => copyToClipboard(copyRawButton, originalContent, 'Copy Raw'));
-		toggleWrapButton.addEventListener('click', () => codeViewContainer.classList.toggle('wrap-enabled'));
+		toggleWrapButton.addEventListener('click', () => {
+			codeViewContainer.classList.toggle('wrap-enabled');
+			// Only hide the line count info in footer, keep the line numbers visible
+			if (codeViewContainer.classList.contains('wrap-enabled')) {
+				if (lineInfoDiv) lineInfoDiv.style.display = 'none';
+			} else {
+				if (lineInfoDiv) lineInfoDiv.style.display = '';
+			}
+		});
 
 		const searchInput = document.getElementById('searchInput');
 		const prevMatchButton = document.getElementById('prevMatchButton');
@@ -587,20 +599,78 @@ async function initPastePage() {
 				return;
 			}
 
-			// Reset to original content first
+			// Reset to original content and apply syntax highlighting first
 			codeBlock.innerHTML = originalHTML;
+			hljs.highlightElement(codeBlock);
 
-			// Escape special regex characters
-			const safeTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-			const regex = new RegExp(`(${safeTerm})`, 'gi');
+			// Now search in the text content only, not HTML
+			const textContent = codeBlock.textContent || '';
+			const searchRegex = new RegExp(searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
 			
-			// Replace all matches with highlighted versions
-			let matchCount = 0;
-			const highlighted = codeBlock.innerHTML.replace(regex, (match) => {
-				return `<mark data-idx="${matchCount++}">${match}</mark>`;
+			// Find all text matches
+			let match;
+			const textMatches = [];
+			while ((match = searchRegex.exec(textContent)) !== null) {
+				textMatches.push({
+					start: match.index,
+					end: match.index + match[0].length,
+					text: match[0]
+				});
+			}
+
+			if (textMatches.length === 0) {
+				searchResultCount.textContent = '0 results';
+				matches = [];
+				currentMatchIndex = -1;
+				return;
+			}
+
+			// Use TreeWalker to find text nodes and wrap matches
+			const walker = document.createTreeWalker(
+				codeBlock,
+				NodeFilter.SHOW_TEXT,
+				null,
+				false
+			);
+
+			const textNodes = [];
+			let node;
+			while (node = walker.nextNode()) {
+				textNodes.push(node);
+			}
+
+			// Process matches from end to start to avoid offset issues
+			textMatches.reverse().forEach((matchInfo, index) => {
+				let currentOffset = 0;
+				for (const textNode of textNodes) {
+					const nodeLength = textNode.textContent.length;
+					if (currentOffset + nodeLength > matchInfo.start) {
+						const relativeStart = Math.max(0, matchInfo.start - currentOffset);
+						const relativeEnd = Math.min(nodeLength, matchInfo.end - currentOffset);
+						
+						if (relativeStart < relativeEnd) {
+							const range = document.createRange();
+							range.setStart(textNode, relativeStart);
+							range.setEnd(textNode, relativeEnd);
+							
+							const mark = document.createElement('mark');
+							mark.setAttribute('data-idx', textMatches.length - 1 - index);
+							
+							try {
+								range.surroundContents(mark);
+							} catch (e) {
+								// If surroundContents fails, extract and wrap
+								const contents = range.extractContents();
+								mark.appendChild(contents);
+								range.insertNode(mark);
+							}
+						}
+						break;
+					}
+					currentOffset += nodeLength;
+				}
 			});
 
-			codeBlock.innerHTML = highlighted;
 			matches = Array.from(codeBlock.querySelectorAll('mark'));
 
 			if (matches.length > 0) {
@@ -662,7 +732,6 @@ async function initPastePage() {
 		if (nextMatchButton) nextMatchButton.addEventListener('click', () => navigateSearch(1));
 		
 		if (searchInput) {
-			searchInput.addEventListener('input', performSearch); // Use 'input' for real-time search
 			searchInput.addEventListener('keyup', (e) => {
 				if (e.key === 'Enter') performSearch();
 			});
