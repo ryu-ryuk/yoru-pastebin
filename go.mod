@@ -1,4 +1,4 @@
-module github.com/ryu-ryuk/yoru
+module github.com/ryu-ryuk/yoru-pastebin
 
 go 1.24.4
 
