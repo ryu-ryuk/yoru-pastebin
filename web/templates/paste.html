@@ -12,28 +12,33 @@
     <div class="page-container">
         <div class="paste-component">
             <header class="paste-header">
-                <a href="/" class="logo-link">Yoru</a>
-                <div class="paste-meta">
-                    {{if .Paste.IsFile}}
-                    <span>File Paste</span>
-                    {{else}}
-                    <span>{{.Paste.Language}}</span>
-                    {{if .Paste.IsProtected}}<span>Protected</span>{{end}}
-                    {{end}}
-                </div>
-                <div class="header-actions">
-                    <button id="copyShareLinkButton" class="button button-primary prominent-copy">Copy Link</button>
-                    {{if not .Paste.IsFile}}
-                    <button id="copyButton" class="button button-secondary">Copy Raw</button>
-                    {{end}}
-                    <a href="/" class="button new-paste-button">New Paste</a>
+                <div class="paste-header-inner">
+                    <div class="left-meta">
+                        <a href="/" class="logo-link">Yoru</a>
+                        <div class="paste-meta">
+                            {{if .Paste.IsFile}}
+                                <span>File</span>
+                            {{else}}
+                                <span>{{.Paste.Language}}</span>
+                                {{if .Paste.IsProtected}}<span>Protected</span>{{end}}
+                            {{end}}
+                        </div>
+                    </div>
+                    <div class="header-actions">
+                        {{if not .Paste.IsFile}}
+                            <button id="copyButton" class="button button-secondary">Copy Raw</button>
+                        {{end}}
+                        <a href="/" class="button new-paste-button">New</a>
+                    </div>
                 </div>
             </header>
+
+
             <main class="paste-body">
-                <div class="share-link-section prominent-share">
+                <div class="share-link-card">
                     <label for="shareLinkInput">Share Link:</label>
                     <div class="share-link-container">
-                        <input type="text" id="shareLinkInput" value="https://paste.alokranjan.me/{{.Paste.ID}}/" readonly>
+                        <input type="text" id="shareLinkInput" readonly value="https://paste.alokranjan.me/{{.Paste.ID}}/">
                         <button id="copyShareLinkButtonSecondary" class="button button-secondary">Copy</button>
                     </div>
                 </div>
@@ -65,8 +70,9 @@
                         </div>
                     </div>
                     <div class="code-view-container">
+                        <span class="code-lang-tag">{{.Paste.Language}}</span>
                         <div class="line-numbers" aria-hidden="true"></div>
-			<pre><code class="language-{{ .Paste.Language | js }}">{{ .Paste.Content | html }}</code></pre>
+                        <pre><code class="language-{{ .Paste.Language | js }}">{{ .Paste.Content | html }}</code></pre>
                     </div>
                 </div>
                 {{end}}
@@ -86,14 +92,9 @@
         </div>
 
     <footer class="site-footer">
-        <div class="footer-content">
-            <a href="https://github.com/ryu-ryuk/yoru-pastebin" target="_blank" class="github-link">
-                <img src="/static/favicon.png" alt="logo" width="16" height="16" />
-                <span>source</span>
-            </a>
-            <span>&copy; {{ .CurrentYear }} <strong>Yoru Pastebin</strong></span>
-            <span>built with <span class="go-tag">go</span></span>
-        </div>
+    <div class="footer-content">
+        <a href="https://github.com/ryu-ryuk/yoru-pastebin" target="_blank" class="github-link">Source</a> ~ Yoru Pastebin
+    </div>
     </footer>
     </div>
     <script src="/static/script.js"></script>

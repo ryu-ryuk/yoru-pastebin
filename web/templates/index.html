@@ -15,16 +15,17 @@
     <div class="page-container">
         <div class="form-component">
             <header class="form-header">
-                <div class="zen-title-wrapper">
-                    <div class="particle aura aura1"></div>
-                    <div class="particle aura aura2"></div>
-
-                    <h1 class="zen-title">
-                        <span class="zen-highlight">Yoru</span> <span class="h1-fade">Pastebin</span>
+                <div class="professional-header">
+                    <h1 class="main-title">
+                        <span class="brand-name">Yoru</span> <span class="service-type">Pastebin</span>
                     </h1>
+                    <p class="tagline">Secure, fast, and reliable text and file sharing for teams and developers.</p>
+                    <div class="feature-badges">
+                        <span class="badge">※ AES-256 Encryption</span>
+                        <span class="badge">✧ Enterprise Ready</span>
+                        <span class="badge">⇨ API Access</span>
+                    </div>
                 </div>
-                <p class="subtitle">securely share text snippets and files.</p>
-
             </header>
 
 
@@ -109,6 +110,15 @@
                             </span>
                             <div class="drop-zone-preview" style="display: none;"></div>
                         </label>
+                        <div class="form-options" style="margin-top: 1rem;">
+                            <div class="form-group">
+                                <label for="file-password">Password</label>
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <input type="password" name="file-password" id="file-password" placeholder="Optional" style="flex: 1;">
+                                    <button type="button" id="toggle-file-password" class="button" style="padding: 0 0.75rem;">show</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <footer class="form-footer">
@@ -129,17 +139,23 @@
                     </footer>
                 </form>
             </main>
+            
+            <!-- Legal links section -->
+            <div class="legal-links-section">
+                <p class="legal-text">
+                    By using this service, you agree to our 
+                    <a href="/privacy" class="legal-link">Privacy Policy</a> and 
+                    <a href="/terms" class="legal-link">Terms of Service</a>
+                </p>
+            </div>
         </div>
     <footer class="site-footer">
-        <div class="footer-content">
-            <a href="https://github.com/ryu-ryuk/yoru-pastebin" target="_blank" class="github-link">
-                <img src="/static/favicon.png" alt="logo" width="16" height="16" />
-                <span>source</span>
-            </a>
-            <span>&copy; {{ .CurrentYear }} <strong>Yoru Pastebin</strong></span>
-            <span>built with <span class="go-tag">go</span></span>
-        </div>
+    <div class="footer-content">
+        <a href="https://github.com/ryu-ryuk/yoru-pastebin" target="_blank" class="github-link">Source</a> ~ Yoru Pastebin
+    </div>
     </footer>
+
+
 
 
     </div>
