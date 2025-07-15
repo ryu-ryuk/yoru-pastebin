@@ -2,6 +2,10 @@ package server
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -13,18 +17,20 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ryu-ryuk/yoru/internal/config"
-	"github.com/ryu-ryuk/yoru/internal/database"
-	"github.com/ryu-ryuk/yoru/internal/paste"
-	"github.com/ryu-ryuk/yoru/pkg/crypt"
-	"github.com/ryu-ryuk/yoru/pkg/idgen"
-	"github.com/ryu-ryuk/yoru/pkg/storage"
+	"github.com/ryu-ryuk/yoru-pastebin/internal/config"
+	"github.com/ryu-ryuk/yoru-pastebin/internal/database"
+	"github.com/ryu-ryuk/yoru-pastebin/internal/paste"
+	"github.com/ryu-ryuk/yoru-pastebin/pkg/crypt"
+	"github.com/ryu-ryuk/yoru-pastebin/pkg/idgen"
+	"github.com/ryu-ryuk/yoru-pastebin/pkg/storage"
 )
 
 const (
-	templatesDir  = "./web/templates/"
-	staticDir     = "./web/static"
-	maxUploadSize = 30 * 1024 * 1024
+	templatesDir      = "./web/templates/"
+	staticDir         = "./web/static"
+	maxUploadSize     = 30 * 1024 * 1024
+	sessionCookieName = "yoru_creator_session"
+	sessionDuration   = 15 * time.Minute
 )
 
 type PageData struct {
@@ -73,6 +79,54 @@ func NewServer(cfg *config.Config, db *database.DB) *Server {
 		storage:   storageInstance,
 		baseURL:   cfg.Server.BaseURL,
 	}
+}
+
+// generateSessionToken creates a secure random token for session management
+func generateSessionToken() (string, error) {
+	bytes := make([]byte, 32)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return base64.URLEncoding.EncodeToString(bytes), nil
+}
+
+// sets a session cookie to remember the paste creator
+func (s *Server) setCreatorSession(w http.ResponseWriter, pasteID, password string) {
+	token, err := generateSessionToken()
+	if err != nil {
+		log.Printf("Failed to generate session token: %v", err)
+		return
+	}
+
+	// store pasteID:password:token for protected pastes
+	sessionValue := fmt.Sprintf("%s:%s:%s", pasteID, password, token)
+
+	cookie := &http.Cookie{
+		Name:     sessionCookieName,
+		Value:    sessionValue,
+		Path:     "/",
+		MaxAge:   int(sessionDuration.Seconds()),
+		HttpOnly: true,
+		Secure:   strings.HasPrefix(s.baseURL, "https://"),
+		SameSite: http.SameSiteLaxMode,
+	}
+	http.SetCookie(w, cookie)
+}
+
+// checks if the current request has a valid creator session for the paste
+func (s *Server) isCreatorSession(r *http.Request, pasteID string) (bool, string) {
+	cookie, err := r.Cookie(sessionCookieName)
+	if err != nil {
+		return false, ""
+	}
+
+	parts := strings.SplitN(cookie.Value, ":", 3)
+	if len(parts) != 3 {
+		return false, ""
+	}
+
+	cookiePasteID, password, _ := parts[0], parts[1], parts[2]
+	return cookiePasteID == pasteID, password
 }
 
 func mustInitTemplates() *template.Template {
@@ -128,7 +182,11 @@ func (s *Server) setupRoutes() *http.ServeMux {
 	mux.HandleFunc("GET /api/v1/pastes/{id}", s.apiGetPaste())
 	mux.HandleFunc("GET /health", s.handleHealth())
 
-	// Static files only
+	// legal pages
+	mux.HandleFunc("GET /privacy", s.handlePrivacy())
+	mux.HandleFunc("GET /terms", s.handleTerms())
+
+	// stat files only
 	fs := http.FileServer(http.Dir(staticDir))
 	cachedFS := withStaticCache(http.StripPrefix("/static/", fs))
 	mux.Handle("GET /static/", cachedFS)
@@ -263,11 +321,6 @@ func (s *Server) handleCreatePaste() http.HandlerFunc {
 		hasContent := content != ""
 		hasFile := fileErr == nil
 
-		log.Printf("DEBUG: content=%s, hasContent=%v, fileErr=%v, hasFile=%v", content, hasContent, fileErr, hasFile)
-		if header != nil {
-			log.Printf("DEBUG: filename=%s, size=%d", header.Filename, header.Size)
-		}
-
 		if !hasContent && !hasFile {
 			s.renderTemplate(w, "error.html", PageData{
 				Message:    "please provide content or file",
@@ -291,10 +344,10 @@ func (s *Server) handleCreatePaste() http.HandlerFunc {
 				return
 			}
 
-			s3Key := fmt.Sprintf("uploads/%s/%s", id, header.Filename)
+			s3Key := s.generateSecureFilePath(id, header.Filename)
 			newPaste.S3Key = &s3Key
 
-			// Upload using the storage interface
+			// upload using the storage interface
 			err := s.storage.Upload(ctx, s3Key, file, storage.FileInfo{
 				Key:          s3Key,
 				OriginalName: header.Filename,
@@ -319,16 +372,28 @@ func (s *Server) handleCreatePaste() http.HandlerFunc {
 			if newPaste.Language == "" {
 				newPaste.Language = "plaintext"
 			}
+			newPaste.Content = content
+		}
 
-			password := r.FormValue("password")
-			if password != "" {
-				hash, err := crypt.GenerateHash(password, s.config.Security.BcryptCost)
-				if err != nil {
-					s.renderTemplate(w, "error.html", PageData{Message: "password error", StatusCode: 500}, 500)
-					return
-				}
-				newPaste.PasswordHash = &hash
+		// handle password protection for both files and text
+		password := r.FormValue("password")          // Text tab password
+		filePassword := r.FormValue("file-password") // File tab password
 
+		// use the appropriate password based on what type of paste this is
+		if hasFile && filePassword != "" {
+			password = filePassword
+		}
+
+		if password != "" {
+			hash, err := crypt.GenerateHash(password, s.config.Security.BcryptCost)
+			if err != nil {
+				s.renderTemplate(w, "error.html", PageData{Message: "password error", StatusCode: 500}, 500)
+				return
+			}
+			newPaste.PasswordHash = &hash
+
+			// for text pastes, encrypt the content
+			if !hasFile {
 				salt, err := crypt.GenerateSalt()
 				if err != nil {
 					s.renderTemplate(w, "error.html", PageData{Message: "salt gen error", StatusCode: 500}, 500)
@@ -344,9 +409,9 @@ func (s *Server) handleCreatePaste() http.HandlerFunc {
 				}
 				newPaste.Content = encrypted
 				newPaste.EncryptedIV = iv
-			} else {
-				newPaste.Content = content
 			}
+			// for files, we don't encrypt the file content itself,
+			// but we protect access to the download URL with the password
 		}
 
 		exp := r.FormValue("expires_in_minutes")
@@ -358,6 +423,9 @@ func (s *Server) handleCreatePaste() http.HandlerFunc {
 			s.renderTemplate(w, "error.html", PageData{Message: "db save error", StatusCode: 500}, 500)
 			return
 		}
+
+		// set creator session cookie
+		s.setCreatorSession(w, id, password)
 
 		http.Redirect(w, r, fmt.Sprintf("/%s/", id), http.StatusFound)
 	}
@@ -419,7 +487,10 @@ func (s *Server) handleGetPaste() http.HandlerFunc {
 		// Don't automatically redirect to download - let user choose
 
 		if p.IsProtected() {
-			if r.Method == http.MethodGet {
+			// check if this is the creator accessing their own paste
+			isCreator, creatorPassword := s.isCreatorSession(r, p.ID)
+
+			if r.Method == http.MethodGet && !isCreator {
 				s.renderTemplate(w, "password_prompt.html", PageData{
 					PasteID:     p.ID,
 					CurrentYear: time.Now().Year(),
@@ -428,45 +499,56 @@ func (s *Server) handleGetPaste() http.HandlerFunc {
 				return
 			}
 
-			pass := r.FormValue("password")
-			if pass == "" {
-				s.renderTemplate(w, "password_prompt.html", PageData{
-					PasteID:     p.ID,
-					Message:     "password is required",
-					CurrentYear: time.Now().Year(),
-				}, http.StatusUnauthorized)
-				return
+			var decryptionPassword string
+
+			// if not creator, handle password verification
+			if !isCreator {
+				pass := r.FormValue("password")
+				if pass == "" {
+					s.renderTemplate(w, "password_prompt.html", PageData{
+						PasteID:     p.ID,
+						Message:     "password is required",
+						CurrentYear: time.Now().Year(),
+					}, http.StatusUnauthorized)
+					return
+				}
+
+				if err := crypt.CompareHashAndPassword(*p.PasswordHash, pass); err != nil {
+					s.renderTemplate(w, "password_prompt.html", PageData{
+						PasteID:     p.ID,
+						Message:     "incorrect password",
+						CurrentYear: time.Now().Year(),
+					}, http.StatusUnauthorized)
+					return
+				}
+				decryptionPassword = pass
+			} else {
+				decryptionPassword = creatorPassword
 			}
 
-			if err := crypt.CompareHashAndPassword(*p.PasswordHash, pass); err != nil {
-				s.renderTemplate(w, "password_prompt.html", PageData{
-					PasteID:     p.ID,
-					Message:     "incorrect password",
-					CurrentYear: time.Now().Year(),
-				}, http.StatusUnauthorized)
-				return
-			}
+			// decrypt content only for text pastes (file pastes don't have encrypted content)
+			if !p.IsFile {
+				if len(p.Salt) == 0 {
+					s.renderTemplate(w, "error.html", PageData{
+						Message:     "salt missing. recreate paste.",
+						StatusCode:  500,
+						CurrentYear: time.Now().Year(),
+					}, 500)
+					return
+				}
 
-			if len(p.Salt) == 0 {
-				s.renderTemplate(w, "error.html", PageData{
-					Message:     "salt missing. recreate paste.",
-					StatusCode:  500,
-					CurrentYear: time.Now().Year(),
-				}, 500)
-				return
+				key := crypt.DeriveKey([]byte(decryptionPassword), p.Salt)
+				content, err := crypt.Decrypt(p.Content, p.EncryptedIV, key)
+				if err != nil {
+					s.renderTemplate(w, "error.html", PageData{
+						Message:     "decryption failed",
+						StatusCode:  500,
+						CurrentYear: time.Now().Year(),
+					}, 500)
+					return
+				}
+				p.Content = string(content)
 			}
-
-			key := crypt.DeriveKey([]byte(pass), p.Salt)
-			content, err := crypt.Decrypt(p.Content, p.EncryptedIV, key)
-			if err != nil {
-				s.renderTemplate(w, "error.html", PageData{
-					Message:     "decryption failed",
-					StatusCode:  500,
-					CurrentYear: time.Now().Year(),
-				}, 500)
-				return
-			}
-			p.Content = string(content)
 		}
 
 		s.renderTemplate(w, "paste.html", PageData{
@@ -711,6 +793,34 @@ func (s *Server) handleFileDownload() http.HandlerFunc {
 			return
 		}
 
+		// SECURITY: Check if paste is password protected
+		if p.IsProtected() {
+			// Check if user is the creator (session-based)
+			isCreator, _ := s.isCreatorSession(r, p.ID)
+			log.Printf("File download - paste %s is protected, isCreator: %v", p.ID, isCreator)
+
+			if !isCreator {
+				// Check for password in query parameter or require authentication
+				password := r.URL.Query().Get("password")
+				if password == "" {
+					log.Printf("File download - no password provided, redirecting to paste page")
+					// Redirect to paste page for authentication
+					http.Redirect(w, r, fmt.Sprintf("/%s/", p.ID), http.StatusFound)
+					return
+				}
+
+				// Verify password
+				if err := crypt.CompareHashAndPassword(*p.PasswordHash, password); err != nil {
+					log.Printf("File download - invalid password provided")
+					http.Error(w, "Invalid password", http.StatusUnauthorized)
+					return
+				}
+				log.Printf("File download - password verified successfully")
+			} else {
+				log.Printf("File download - creator session detected, allowing access")
+			}
+		}
+
 		// Check storage type and serve file securely
 		// For local/hybrid storage with local fallback, serve file directly
 		filePath := filepath.Join("./data/uploads", *p.S3Key)
@@ -746,5 +856,46 @@ func (s *Server) handleFileDownload() http.HandlerFunc {
 		}
 
 		http.Redirect(w, r, url, http.StatusFound)
+	}
+}
+
+// generateSecureFilePath creates a hash-based path for file storage
+// This prevents direct file system access and adds security
+func (s *Server) generateSecureFilePath(pasteID, filename string) string {
+	// Create a hash of paste ID + filename + timestamp for uniqueness
+	hash := sha256.Sum256([]byte(pasteID + filename + fmt.Sprintf("%d", time.Now().UnixNano())))
+	hashStr := hex.EncodeToString(hash[:])
+
+	// Use first few characters to create directory structure
+	// This spreads files across directories for better performance
+	dir1 := hashStr[:2]
+	dir2 := hashStr[2:4]
+
+	return fmt.Sprintf("secure/%s/%s/%s", dir1, dir2, hashStr)
+}
+
+func (s *Server) handlePrivacy() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		s.renderTemplate(w, "privacy.html", PageData{
+			CurrentYear: time.Now().Year(),
+			CurrentPort: s.config.Server.Port,
+		}, http.StatusOK)
+	}
+}
+
+func (s *Server) handleTerms() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		s.renderTemplate(w, "terms.html", PageData{
+			CurrentYear: time.Now().Year(),
+			CurrentPort: s.config.Server.Port,
+		}, http.StatusOK)
 	}
 }
