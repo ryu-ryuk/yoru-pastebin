@@ -3,19 +3,18 @@ package main
 import (
 	"context"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
-	"net/http"
 	"time"
 
-	"github.com/ryu-ryuk/yoru/internal/config"
-	"github.com/ryu-ryuk/yoru/internal/database"
-	"github.com/ryu-ryuk/yoru/internal/server" 
+	"github.com/ryu-ryuk/yoru-pastebin/internal/config"
+	"github.com/ryu-ryuk/yoru-pastebin/internal/database"
+	"github.com/ryu-ryuk/yoru-pastebin/internal/server"
 )
 
-
-// main function initlializes the application, loads configuration, connects to the database, starts the HTTP server, 
+// main function initlializes the application, loads configuration, connects to the database, starts the HTTP server,
 // and handles proper shutdown.
 
 // This is the entry point of the Yoru Pastebin application.
@@ -29,7 +28,7 @@ func main() {
 	}
 	// log the configuration for debugging purposes
 	// log.Printf("Configuration loaded: %+v", cfg)
-	
+
 	// connecting to the database
 	db, err := database.NewDB(cfg)
 	if err != nil {
