@@ -3,17 +3,16 @@ package database
 import (
 	"context"
 	"fmt"
-	"log" 
+	"log"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/ryu-ryuk/yoru/internal/config"
+	"github.com/ryu-ryuk/yoru-pastebin/internal/config"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
-
 
 // DB represents our database connection pool.
 type DB struct {
@@ -54,7 +53,7 @@ func NewDB(cfg *config.Config) (*DB, error) {
 // applying database migrations.
 func RunMigrations(databaseURL string) error {
 	m, err := migrate.New(
-		"file://db/migrations", // path to migration files 
+		"file://db/migrations", // path to migration files
 		databaseURL,
 	)
 	if err != nil {
@@ -66,7 +65,7 @@ func RunMigrations(databaseURL string) error {
 	err = m.Up()
 	if err != nil && err != migrate.ErrNoChange {
 		// log the error for debugging
-		log.Printf("Migration error: %v", err) 
+		log.Printf("Migration error: %v", err)
 		// check for specific migration errors like dirty database
 		version, dirty, migErr := m.Version()
 		if migErr == nil && dirty {
