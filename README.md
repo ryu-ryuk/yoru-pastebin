@@ -35,6 +35,9 @@ Yoru Pastebin implements enterprise-grade security, performance optimizations, a
 - **Zero-knowledge encryption** with AES-256-GCM for password-protected pastes
 - **Cryptographically secure ID generation** using Base62 encoding
 - **PBKDF2 key derivation** with bcrypt cost factor 12 for password hashing
+- **Secure file storage** with hash-based paths preventing direct access
+- **Creator session management** with 15-minute expiration for seamless UX
+- **Protected file downloads** requiring authentication for password-protected content
 - **Content Security Policy** headers and XSS protection via Traefik
 - **Rate limiting** (2 requests/second default) and DDoS protection
 - **Automatic expiration** with secure deletion (24-hour default)
@@ -319,8 +322,45 @@ docker-compose -f docker-compose.prod.yml exec db pg_dump -U yoru_user yoru_past
 docker-compose -f docker-compose.prod.yml up -d --scale yoru=3
 ```
 
-### Security Features
+## Security Features
 
+### File Storage Security
+Yoru implements a multi-layered security approach for file storage:
+
+**Hash-Based Storage Paths:**
+- Files are stored using SHA-256 hashes instead of predictable paste IDs
+- Directory structure: `secure/ab/cd/abcdef123...` prevents enumeration
+- Original filenames are preserved only in database metadata
+
+**Access Control:**
+- All file downloads go through application authentication
+- Protected files require password verification before serving
+- Creator session cookies (15-minute expiration) provide seamless access
+- Path traversal protection prevents unauthorized directory access
+
+**Storage Implementation:**
+```go
+// Example secure file path generation
+func generateSecureFilePath(pasteID, filename string) string {
+    hash := sha256.Sum256([]byte(pasteID + filename + timestamp))
+    hashStr := hex.EncodeToString(hash[:])
+    return fmt.Sprintf("secure/%s/%s/%s", hashStr[:2], hashStr[2:4], hashStr)
+}
+```
+
+### Encryption & Password Protection
+- **AES-256-GCM encryption** for password-protected content
+- **PBKDF2 key derivation** with configurable iteration count
+- **Cryptographically secure salt generation** (32 bytes per paste)
+- **Zero-knowledge architecture** - server never stores plaintext passwords
+
+### Session Management
+- **Temporary creator sessions** allow seamless access to protected pastes
+- **Secure session tokens** using crypto/rand with 32-byte entropy
+- **HttpOnly cookies** with appropriate SameSite and Secure flags
+- **Automatic expiration** prevents long-term session hijacking
+
+### Infrastructure Security
 - **Traefik Security Headers:** Frame denial, XSS protection, HSTS
 - **Rate Limiting:** 10 requests/minute average, 20 burst
 - **Content Security Policy:** Strict policy for XSS prevention
