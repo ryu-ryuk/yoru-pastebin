@@ -1178,20 +1178,33 @@ textarea {
     }
     
     .feature-badges {
-        flex-direction: column;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
         align-items: center;
-        gap: 0.6rem;
-        padding: 0 2rem;
+        gap: 0.5rem;
+        padding: 0 1rem;
         margin-top: 1.5rem;
     }
     
     .badge {
-        font-size: 0.75rem;
-        padding: 0.4rem 1rem;
-        width: 100%;
-        max-width: 200px;
+        font-size: 0.7rem;
+        padding: 0.35rem 0.8rem;
+        min-width: fit-content;
+        flex: 0 0 auto;
         text-align: center;
         border-radius: 1.2rem;
+        white-space: nowrap;
+        background: rgba(203, 166, 247, 0.15);
+        border: 1px solid rgba(203, 166, 247, 0.3);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
+    
+    .badge:hover {
+        background: rgba(203, 166, 247, 0.25);
+        border-color: rgba(203, 166, 247, 0.5);
+        transform: translateY(-2px);
     }
 }
 
@@ -1529,5 +1542,118 @@ select:focus {
     .header-actions .button {
         flex: 1 1 auto;
         min-width: 120px;
+    }
+}
+
+/* --- 📋 DROPDOWN/SELECT STYLING --- */
+select {
+    width: 100%;
+    background: rgba(49, 50, 68, 0.9);
+    border: 1px solid var(--surface1);
+    border-radius: 0.625rem;
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0.75rem 1rem;
+    transition: all 0.25s ease;
+    cursor: pointer;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23a6adc8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.75rem center;
+    background-repeat: no-repeat;
+    background-size: 1.25rem;
+    padding-right: 2.75rem;
+}
+
+select:hover {
+    border-color: var(--mauve);
+    background-color: rgba(69, 71, 90, 0.9);
+    box-shadow: 0 0 0 3px rgba(203, 166, 247, 0.1);
+}
+
+select:focus {
+    border-color: var(--lavender);
+    background-color: rgba(69, 71, 90, 0.95);
+    box-shadow: 0 0 0 3px rgba(180, 190, 254, 0.15);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23b4befe' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+}
+
+/* Custom styling for select options */
+select option {
+    background-color: var(--surface0);
+    color: var(--text);
+    padding: 0.5rem 1rem;
+    border: none;
+    font-weight: 500;
+}
+
+select option:hover,
+select option:focus {
+    background-color: var(--surface1);
+    color: var(--lavender);
+}
+
+select option:checked {
+    background-color: var(--mauve);
+    color: var(--crust);
+    font-weight: 600;
+}
+
+/* Specific styling for language and expiration dropdowns */
+#language,
+#expires {
+    background-color: rgba(49, 50, 68, 0.8);
+    border: 1px solid rgba(124, 132, 147, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#language:hover,
+#expires:hover {
+    border-color: var(--mauve);
+    background-color: rgba(69, 71, 90, 0.85);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(203, 166, 247, 0.1);
+}
+
+#language:focus,
+#expires:focus {
+    border-color: var(--lavender);
+    background-color: rgba(69, 71, 90, 0.9);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(180, 190, 254, 0.15);
+}
+
+/* Enhanced mobile responsiveness for dropdowns */
+@media (max-width: 768px) {
+    select {
+        font-size: 16px; /* Prevents zoom on iOS */
+        padding: 0.875rem 1rem;
+        background-size: 1.5rem;
+        padding-right: 3rem;
+    }
+    
+    #language,
+    #expires {
+        background-color: rgba(49, 50, 68, 0.95);
+    }
+}
+
+/* Dark theme optimizations for better contrast */
+@media (prefers-color-scheme: dark) {
+    select {
+        background-color: rgba(30, 30, 46, 0.9);
+        border-color: var(--surface2);
+    }
+    
+    select:hover {
+        background-color: rgba(49, 50, 68, 0.9);
+    }
+    
+    select:focus {
+        background-color: rgba(69, 71, 90, 0.95);
     }
 }
