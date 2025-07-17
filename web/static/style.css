@@ -1882,3 +1882,115 @@ select option:checked {
         background-color: rgba(69, 71, 90, 0.95);
     }
 }
+
+/* Mobile styles for legal pages */
+@media (max-width: 768px) {
+    .legal-page {
+        margin: 1rem;
+        padding: 1.5rem;
+        border-radius: 1rem;
+    }
+    
+    .legal-header h1 {
+        font-size: 2rem;
+    }
+    
+    .legal-content h2 {
+        font-size: 1.25rem;
+    }
+    
+    .legal-content h3 {
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .legal-page {
+        margin: 0.5rem;
+        padding: 1rem;
+        border-radius: 0.75rem;
+    }
+    
+    .legal-header {
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+    }
+    
+    .legal-header h1 {
+        font-size: 1.75rem;
+        margin-bottom: 0.25rem;
+    }
+    
+    .logo-link {
+        font-size: 1.1rem;
+    }
+    
+    .legal-content {
+        line-height: 1.6;
+    }
+    
+    .legal-content section {
+        margin-bottom: 2rem;
+    }
+    
+    .legal-content h2 {
+        font-size: 1.15rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .legal-content h3 {
+        font-size: 1rem;
+        margin: 1rem 0 0.5rem 0;
+    }
+    
+    .legal-content ul {
+        padding-left: 1.25rem;
+        margin: 0.75rem 0;
+    }
+}
+
+@media (max-width: 400px) {
+    .legal-page {
+        margin: 0.25rem;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+    }
+    
+    .legal-header {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+    }
+    
+    .legal-header h1 {
+        font-size: 1.5rem;
+        line-height: 1.2;
+    }
+    
+    .logo-link {
+        font-size: 1rem;
+    }
+    
+    .last-updated {
+        font-size: 0.85rem;
+    }
+    
+    .legal-content h2 {
+        font-size: 1.05rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .legal-content h3 {
+        font-size: 0.95rem;
+        margin: 0.75rem 0 0.5rem 0;
+    }
+    
+    .legal-content ul {
+        padding-left: 1rem;
+        margin: 0.5rem 0;
+    }
+    
+    .legal-content li {
+        margin-bottom: 0.4rem;
+        font-size: 0.9rem;
+    }
+}
