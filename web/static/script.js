@@ -1,3 +1,4 @@
+// Version 2.0 - Clean implementation
 document.addEventListener('DOMContentLoaded', () => {
 	if (document.querySelector('.form-component')) {
 		initHomePage();
@@ -156,13 +157,12 @@ function initHomePage() {
 			return new Promise((resolve, reject) => {
 				script.onload = () => resolve();
 				script.onerror = () => {
-					console.warn(`Failed to load language: ${lang}`);
 					reject(new Error(`Failed to load ${lang}`));
 				};
 				document.head.appendChild(script);
 			});
 		} catch (error) {
-			console.warn(`Language ${lang} not available:`, error);
+			// Language not available, will fall back to auto-detection
 		}
 	}
 
@@ -260,7 +260,7 @@ function initHomePage() {
 		// Real-time language detection for auto mode
 		let detectTimeout;
 		textInput.addEventListener('input', () => {
-			clearTimeout(detectTimeout);
+			clearTimeout(detectTimeout); 
 			detectTimeout = setTimeout(async () => {
 				if (languageSelect.value === 'auto' && textInput.value.trim()) {
 					const detected = await detectLanguage(textInput.value);
@@ -495,8 +495,6 @@ async function initPastePage() {
 			.catch(err => { button.textContent = 'Error!'; console.error('Clipboard error:', err); })
 			.finally(() => { setTimeout(() => { button.textContent = originalText; }, 2000); });
 	};
-	const searchInput = document.getElementById('searchInput');
-	const searchButton = document.getElementById('searchButton');
 
 	// make enter key not reload page
 	if (searchInput) {
@@ -546,30 +544,172 @@ async function initPastePage() {
 	if (codeBlock) {
 		// Get original content from the code block
 		const originalContent = codeBlock.textContent || '';
+		const originalHTML = codeBlock.innerHTML;
 
 		const lineNumbersDiv = document.querySelector('.line-numbers');
 		const lineCountSpan = document.getElementById('lineCount');
 		const codeViewContainer = document.querySelector('.code-view-container');
 
+		// Check if all required elements exist
+		if (!lineNumbersDiv || !codeViewContainer) {
+			console.warn('Required elements not found for line numbers');
+			return;
+		}
+
 		const lines = originalContent.split('\n');
-		lineCountSpan.textContent = lines.length;
-		lineNumbersDiv.innerHTML = Array.from({ length: lines.length }, (_, i) => `<span>${i + 1}</span>`).join('');
+		if (lineCountSpan) {
+			lineCountSpan.textContent = lines.length;
+		}
+		
+		function updateLineNumbers() {
+			const isWrapEnabled = codeViewContainer.classList.contains('wrap-enabled');
+			
+			// Clear existing line numbers completely
+			lineNumbersDiv.innerHTML = '';
+			lineNumbersDiv.textContent = '';
+			
+			if (!isWrapEnabled) {
+				// Normal mode: simple 1:1 line numbers
+				lines.forEach((line, index) => {
+					const lineNumberSpan = document.createElement('span');
+					lineNumberSpan.textContent = index + 1;
+					lineNumberSpan.className = 'line-number';
+					lineNumberSpan.style.height = '24px';
+					lineNumberSpan.style.lineHeight = '24px';
+					lineNumbersDiv.appendChild(lineNumberSpan);
+				});
+			} else {
+				// Wrap mode: calculate visual lines with proper measurement
+				calculateWrappedLineNumbers();
+			}
+		}
+		
+		function calculateWrappedLineNumbers() {
+			// Wait for CSS to apply
+			setTimeout(() => {
+				const currentCodeBlock = codeViewContainer.querySelector('pre code');
+				if (!currentCodeBlock) {
+					return;
+				}
+				
+				// Get computed styles
+				const computedStyle = getComputedStyle(currentCodeBlock);
+				const lineHeight = parseFloat(computedStyle.lineHeight) || 25.6;
+				
+				// Clear line numbers completely
+				lineNumbersDiv.innerHTML = '';
+				lineNumbersDiv.textContent = '';
+				
+				// Create temporary measurement element
+				const measureDiv = document.createElement('div');
+				measureDiv.style.cssText = `
+					position: absolute;
+					visibility: hidden;
+					top: -9999px;
+					left: -9999px;
+					white-space: pre-wrap;
+					word-break: break-word;
+					overflow-wrap: break-word;
+					width: ${currentCodeBlock.clientWidth}px;
+					font-family: ${computedStyle.fontFamily};
+					font-size: ${computedStyle.fontSize};
+					line-height: ${computedStyle.lineHeight};
+					padding: 0;
+					margin: 0;
+				`;
+				document.body.appendChild(measureDiv);
+				
+				try {
+					let totalVisualLines = 0;
+					lines.forEach((line, index) => {
+						// Measure this line
+						measureDiv.textContent = line || ' ';
+						const height = measureDiv.scrollHeight;
+						const visualLines = Math.max(1, Math.round(height / lineHeight));
+						totalVisualLines += visualLines;
+						
+						// Create line number spans for each visual line
+						for (let i = 0; i < visualLines; i++) {
+							const lineNumberSpan = document.createElement('span');
+							lineNumberSpan.textContent = i === 0 ? (index + 1) : '';
+							lineNumberSpan.className = 'line-number';
+							lineNumberSpan.style.height = lineHeight + 'px';
+							lineNumberSpan.style.lineHeight = lineHeight + 'px';
+							lineNumbersDiv.appendChild(lineNumberSpan);
+						}
+					});
+				} catch (error) {
+					// Fallback to simple line numbers
+					lines.forEach((line, index) => {
+						const lineNumberSpan = document.createElement('span');
+						lineNumberSpan.textContent = index + 1;
+						lineNumberSpan.className = 'line-number';
+						lineNumberSpan.style.height = '24px';
+						lineNumberSpan.style.lineHeight = '24px';
+						lineNumbersDiv.appendChild(lineNumberSpan);
+					});
+				} finally {
+					document.body.removeChild(measureDiv);
+				}
+			}, 100);
+		}
+		
+		// Initialize line numbers
+		updateLineNumbers();
+		
+		// Apply syntax highlighting
+		function applySyntaxHighlighting() {
+			if (window.hljs && codeBlock) {
+				try {
+					delete codeBlock.dataset.highlighted;
+					codeBlock.classList.remove('hljs');
+					
+					// Handle "auto" language by using auto-detection
+					const currentLanguage = codeBlock.className.match(/language-([\w-]+)/)?.[1];
+					
+					if (currentLanguage === 'auto') {
+						// Remove the language-auto class and let highlight.js auto-detect
+						codeBlock.className = codeBlock.className.replace(/language-auto\b/, '').trim();
+						hljs.highlightElement(codeBlock);
+					} else if (currentLanguage) {
+						hljs.highlightElement(codeBlock);
+					} else {
+						hljs.highlightElement(codeBlock);
+					}
+				} catch (error) {
+					console.warn('Syntax highlighting failed:', error);
+				}
+			}
+		}
+		
+		applySyntaxHighlighting();
+		
+		// Initialize line numbers
+		updateLineNumbers();
 
 		const copyRawButton = document.getElementById('copyButton');
 		const toggleWrapButton = document.getElementById('toggleWrap');
-		const lineInfoDiv = document.querySelector('.line-info');
 		
 		copyRawButton.addEventListener('click', () => copyToClipboard(copyRawButton, originalContent, 'Copy Raw'));
+		
 		toggleWrapButton.addEventListener('click', () => {
 			codeViewContainer.classList.toggle('wrap-enabled');
-			// Only hide the line count info in footer, keep the line numbers visible
+			const isWrapEnabled = codeViewContainer.classList.contains('wrap-enabled');
+			toggleWrapButton.textContent = isWrapEnabled ? 'No Wrap' : 'Toggle Wrap';
+			// Update line numbers when wrap mode changes
+			updateLineNumbers();
+		});
+		
+		// Update line numbers when window is resized (important for wrap mode)
+		let resizeTimeout;
+		window.addEventListener('resize', () => {
 			if (codeViewContainer.classList.contains('wrap-enabled')) {
-				if (lineInfoDiv) lineInfoDiv.style.display = 'none';
-			} else {
-				if (lineInfoDiv) lineInfoDiv.style.display = '';
+				clearTimeout(resizeTimeout);
+				resizeTimeout = setTimeout(() => updateLineNumbers(), 150);
 			}
 		});
-
+		
+		// Search functionality
 		const searchInput = document.getElementById('searchInput');
 		const prevMatchButton = document.getElementById('prevMatchButton');
 		const nextMatchButton = document.getElementById('nextMatchButton');
@@ -577,39 +717,29 @@ async function initPastePage() {
 		let matches = [];
 		let currentMatchIndex = -1;
 
-		function escapeHTML(str) {
-			return str
-				.replace(/&/g, "&amp;")
-				.replace(/</g, "&lt;")
-				.replace(/>/g, "&gt;")
-				.replace(/"/g, "&quot;")
-				.replace(/'/g, "&#039;");
-		}
-
-		const originalHTML = codeBlock.innerHTML; // cache only once
-
 		const performSearch = () => {
 			const searchTerm = searchInput.value.trim();
+			
 			if (!searchTerm) {
+				// Clear search
 				codeBlock.innerHTML = originalHTML;
-				hljs.highlightElement(codeBlock);
+				applySyntaxHighlighting();
 				searchResultCount.textContent = '';
 				matches = [];
 				currentMatchIndex = -1;
 				return;
 			}
 
-			// Reset to original content and apply syntax highlighting first
+			// Reset to original content
 			codeBlock.innerHTML = originalHTML;
-			hljs.highlightElement(codeBlock);
+			applySyntaxHighlighting();
 
-			// Now search in the text content only, not HTML
+			// Find and highlight matches
 			const textContent = codeBlock.textContent || '';
 			const searchRegex = new RegExp(searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
 			
-			// Find all text matches
-			let match;
 			const textMatches = [];
+			let match;
 			while ((match = searchRegex.exec(textContent)) !== null) {
 				textMatches.push({
 					start: match.index,
@@ -625,7 +755,7 @@ async function initPastePage() {
 				return;
 			}
 
-			// Use TreeWalker to find text nodes and wrap matches
+			// Apply highlighting using TreeWalker
 			const walker = document.createTreeWalker(
 				codeBlock,
 				NodeFilter.SHOW_TEXT,
@@ -659,7 +789,6 @@ async function initPastePage() {
 							try {
 								range.surroundContents(mark);
 							} catch (e) {
-								// If surroundContents fails, extract and wrap
 								const contents = range.extractContents();
 								mark.appendChild(contents);
 								range.insertNode(mark);
@@ -672,18 +801,12 @@ async function initPastePage() {
 			});
 
 			matches = Array.from(codeBlock.querySelectorAll('mark'));
-
 			if (matches.length > 0) {
 				currentMatchIndex = 0;
 				updateActiveMatch();
-			} else {
-				currentMatchIndex = -1;
-				searchResultCount.textContent = '0 results';
 			}
 		};
-
-
-
+		
 		const updateActiveMatch = () => {
 			matches.forEach(m => m.classList.remove('active'));
 			if (currentMatchIndex >= 0 && matches[currentMatchIndex]) {
@@ -694,48 +817,40 @@ async function initPastePage() {
 			}
 		};
 
-
 		const navigateSearch = (direction) => {
 			if (!matches.length) return;
 			currentMatchIndex = (currentMatchIndex + direction + matches.length) % matches.length;
 			updateActiveMatch();
 		};
 
-		const searchForm = searchInput.closest('form');
+		const searchForm = searchInput?.closest('form');
 		if (searchForm) {
 			searchForm.addEventListener('submit', (e) => {
 				e.preventDefault();
-				e.stopPropagation();
 				return false;
 			});
 		}
-		searchInput.addEventListener('keydown', (e) => {
-			if (e.key === 'Enter') {
-				e.preventDefault();
-				e.stopPropagation();
-				performSearch();
-				return false;
-			}
-			if (e.key === 'ArrowUp') {
-				e.preventDefault();
-				navigateSearch(-1);
-			}
-			if (e.key === 'ArrowDown') {
-				e.preventDefault();
-				navigateSearch(1);
-			}
-		});
+
+		if (searchInput) {
+			searchInput.addEventListener('keydown', (e) => {
+				if (e.key === 'Enter') {
+					e.preventDefault();
+					performSearch();
+				}
+				if (e.key === 'ArrowUp') {
+					e.preventDefault();
+					navigateSearch(-1);
+				}
+				if (e.key === 'ArrowDown') {
+					e.preventDefault();
+					navigateSearch(1);
+				}
+			});
+		}
 		
-		// Add event listeners (remove duplicates)
+		const searchButton = document.getElementById('searchButton');
 		if (searchButton) searchButton.addEventListener('click', performSearch);
 		if (prevMatchButton) prevMatchButton.addEventListener('click', () => navigateSearch(-1));
 		if (nextMatchButton) nextMatchButton.addEventListener('click', () => navigateSearch(1));
-		
-		if (searchInput) {
-			searchInput.addEventListener('keyup', (e) => {
-				if (e.key === 'Enter') performSearch();
-			});
-		}
 	}
 }
-

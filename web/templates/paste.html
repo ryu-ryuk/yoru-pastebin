@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{if .Paste.IsFile}}Download {{.Paste.FileName}}{{else}}Paste {{.Paste.ID}}{{end}} - Yoru</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/style.css?v=3.7" />
     <link rel="icon" type="image/png" href="/static/favicon.png" />
     <link rel="stylesheet" href="/static/hj/catppuccin-mocha.min.css">
 </head>
@@ -19,7 +19,6 @@
                             {{if .Paste.IsFile}}
                                 <span>File</span>
                             {{else}}
-                                <span>{{.Paste.Language}}</span>
                                 {{if .Paste.IsProtected}}<span>Protected</span>{{end}}
                             {{end}}
                         </div>
@@ -78,26 +77,33 @@
                 {{end}}
             </main>
             <footer class="paste-footer">
-                <div class="expiration-info">
-                    {{if .Paste.ExpiresAt}}
-                    Expires: <span id="time-remaining" data-expiry="{{.Paste.ExpiresAt.Format "2006-01-02T15:04:05Z07:00"}}"></span>
-                    {{else}}
-                    <span>Never Expires</span>
-                    {{end}}
+                <div class="footer-left">
+                    <div class="expiration-info">
+                        {{if .Paste.ExpiresAt}}
+                        Expires: <span id="time-remaining" data-expiry="{{.Paste.ExpiresAt.Format "2006-01-02T15:04:05Z07:00"}}"></span>
+                        {{else}}
+                        <span>Never Expires</span>
+                        {{end}}
+                    </div>
                 </div>
-                <div class="line-info" {{if .Paste.IsFile}}style="display: none;"{{end}}>
-                    <span id="lineCount">0</span> lines
+                <div class="footer-right">
+                    <div class="line-info" {{if .Paste.IsFile}}style="display: none;"{{end}}>
+                        <span id="lineCount">0</span> lines
+                    </div>
                 </div>
             </footer>
         </div>
 
-    <footer class="site-footer">
-    <div class="footer-content">
-        <a href="https://github.com/ryu-ryuk/yoru-pastebin" target="_blank" class="github-link">source</a> ~ Yoru Pastebin
-    </div>
+    <footer class="site-footer" style="text-align:center; font-size:0.9rem; user-select:none;">
+        <a href="#" class="yoru-link">#yoru</a> &nbsp;~&nbsp;
+        <a href="https://github.com/ryu-ryuk/yoru-pastebin" target="_blank" class="github-link">#github</a>
     </footer>
+
     </div>
-    <script src="/static/script.js"></script>
+
+
+    </div>
+    <script src="/static/script.js?v=3.8"></script>
     <!-- core highlight.js -->
     <script src="/static/hj/highlight.min.js"></script>
 
@@ -123,34 +129,21 @@
             const lang = langClass?.[1] || 'plaintext';
             const actualLang = langMap[lang] || lang;
             
-            // Only load this specific language if it's not plaintext
-            if (actualLang && actualLang !== 'plaintext') {
+            // Only load this specific language if it's not plaintext or auto
+            if (actualLang && actualLang !== 'plaintext' && actualLang !== 'auto') {
                 const script = document.createElement('script');
                 script.src = `/static/hj/languages/${actualLang}.min.js`;
                 script.onload = () => {
-                    // Language loaded, now highlight
-                    try {
-                        hljs.highlightElement(codeBlock);
-                    } catch (error) {
-                        console.warn('Highlighting failed:', error);
-                    }
+                    // Language loaded, let JavaScript handle highlighting after restructuring
+                    console.log('Language loaded:', actualLang);
                 };
                 script.onerror = () => {
-                    console.warn(`Language file not found: ${actualLang}, using auto-detection`);
-                    try {
-                        hljs.highlightElement(codeBlock);
-                    } catch (error) {
-                        console.warn('Auto-detection highlighting failed:', error);
-                    }
+                    console.warn(`Language file not found: ${actualLang}, will use auto-detection`);
                 };
                 document.head.appendChild(script);
             } else {
-                // No specific language or plaintext, just highlight
-                try {
-                    hljs.highlightElement(codeBlock);
-                } catch (error) {
-                    console.warn('Basic highlighting failed:', error);
-                }
+                // No specific language needed, JavaScript will handle highlighting
+                console.log('Using plaintext or auto-detection for language:', actualLang);
             }
         }
     </script>
