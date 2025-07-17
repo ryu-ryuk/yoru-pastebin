@@ -642,7 +642,7 @@ textarea {
 .tab-panel { display: none; }
 .tab-panel.active { display: block; }
 .form-options { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem; }
-.form-group { display: flex; flex-direction: column; gap: 0.5rem; }
+.form-group { display: flex; flex-direction: column; gap: 0.5rem; position: relative; }
 .form-group label { font-size: 0.9rem; font-weight: 500; color: var(--text-secondary); }
 .form-footer {
     display: flex;
@@ -1538,7 +1538,6 @@ textarea {
     border-radius: 0.75rem;
     border: 1px solid rgba(108, 112, 134, 0.3); /* overlay1 */
     backdrop-filter: blur(10px);
-    flex-wrap: wrap;
 }
 
 #searchInput {
@@ -1682,18 +1681,11 @@ textarea {
 
 
 input[type="text"],
-input[type="password"],
-select {
+input[type="password"] {
     background-color: rgba(17, 17, 27, 0.6);
     color: var(--text);
     appearance: none;
     padding-right: 2rem;
-    cursor: pointer;
-    background-image: linear-gradient(45deg, transparent 50%, var(--mauve) 50%), 
-                      linear-gradient(135deg, var(--mauve) 50%, transparent 50%);
-    background-position: calc(100% - 15px) center, calc(100% - 10px) center;
-    background-size: 5px 5px, 5px 5px;
-    background-repeat: no-repeat;
 }
 
 input[type="text"]::placeholder,
@@ -1783,13 +1775,23 @@ select {
     font-family: var(--font-sans);
     font-size: 0.875rem;
     font-weight: 500;
-    padding: 0.75rem 1rem;
+    padding: 0.75rem 2.5rem 0.75rem 1rem;
     transition: all 0.25s ease;
     cursor: pointer;
     outline: none;
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
+    background-image: none;
+}
+
+/* Force remove all default browser dropdown arrows */
+select::-ms-expand {
+    display: none;
+}
+
+select {
+    background-image: none !important;
 }
 
 select:hover {
@@ -1802,8 +1804,7 @@ select:focus {
     border-color: var(--lavender);
     background-color: rgba(69, 71, 90, 0.95);
     box-shadow: 0 0 0 3px rgba(180, 190, 254, 0.15);
-    background-image: linear-gradient(45deg, transparent 50%, var(--lavender) 50%), 
-                      linear-gradient(135deg, var(--lavender) 50%, transparent 50%);
+    background-image: none;
 }
 
 /* Custom styling for select options */
@@ -1879,85 +1880,5 @@ select option:checked {
     
     select:focus {
         background-color: rgba(69, 71, 90, 0.95);
-    }
-}
-
-
-@media (max-width: 767px) {
-    .code-view-container {
-        display: flex !important;
-        flex-direction: row !important;
-        overflow: hidden !important;
-        background-color: var(--surface0) !important;
-        border: 1px solid var(--border-color) !important;
-        border-radius: 8px !important;
-        font-size: 13px !important;
-    }
-
-    .line-numbers {
-        min-width: 2rem !important;
-        max-width: 2rem !important;
-        padding: 0.75rem 0.3rem !important;
-        font-size: 12px !important;
-        line-height: 20px !important;
-        text-align: right !important;
-        flex-shrink: 0 !important;
-        display: flex !important;
-        flex-direction: column !important;
-        background-color: var(--surface1) !important;
-        border-right: 1px solid var(--border-color) !important;
-    }
-
-    .line-numbers .line-number {
-        display: block !important;
-        height: 20px !important;
-    }
-
-    .code-view-container pre {
-        display: block !important;
-        flex-grow: 1 !important;
-        padding: 0.75rem !important;
-        margin: 0 !important;
-        overflow: auto !important;
-        background: transparent !important;
-        line-height: 1.5 !important;
-    }
-
-    .code-view-container pre code {
-        display: block !important;
-        font-family: var(--font-mono) !important;
-        font-size: 13px !important;
-        line-height: 1.5 !important;
-        white-space: pre-wrap !important;
-        word-break: break-word !important;
-        overflow-wrap: break-word !important;
-        color: var(--text-primary) !important;
-    }
-
-    .hljs {
-        background: transparent !important;
-        padding: 0 !important;
-        display: block !important;
-    }
-
-    .paste-body {
-        padding: 1rem;
-        width: 100%;
-        max-width: 100%;
-        overflow-x: hidden;
-    }
-
-    .paste-footer {
-        border-radius: 0 0 8px 8px; /* round only bottom corners */
-        background-color: var(--surface0);
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-        text-align: center;
-        padding: 1rem;
-    }
-
-    .footer-left, .footer-right {
-        justify-content: center;
     }
 }
